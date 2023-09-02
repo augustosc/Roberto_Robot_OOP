@@ -110,7 +110,7 @@
 
 
   
-  struct obstacleMap * RadarCar::getObstacleInfo(){
+  struct obstacleInfo * RadarCar::getObstacleInfo(){
     return &obstacle;
   }
 

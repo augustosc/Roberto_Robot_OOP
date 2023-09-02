@@ -69,7 +69,7 @@
       Roberto.radarAttach();
     }
 
-    struct obstacleMap * Piloto::getObstacleInfo(){
+    struct obstacleInfo * Piloto::getObstacleInfo(){
       return Roberto.getObstacleInfo();
   }
     

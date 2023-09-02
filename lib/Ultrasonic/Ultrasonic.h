@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 
+/// @brief Ultrasonic class to measure distances
 class Ultrasonic {
 
   private:
@@ -12,6 +13,9 @@ class Ultrasonic {
   public:
     Ultrasonic(){};
     Ultrasonic(int trigPin, int echoPin);
+
+    /// @brief get distance from obstacle
+    /// @return distance in cm
     float getDistance ();
 };
 

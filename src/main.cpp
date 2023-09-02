@@ -5,22 +5,22 @@
 #include "Arduino.h"
 #include "Piloto.h"
 
-
+//-------------------------------------------------- globals
 unsigned long timeout;
 unsigned long timeNow;
 const unsigned long tScanFrontal{4000};
 
-// --------------------------------------------------- pinos do HC_ultrasonic
+// --------------------------------------------------- ultrasonic pins
 const int trigPin = 9;
 const int echoPin = 10;
 
 
-// --------------------------------------------------- Servo pin and constants
+// --------------------------------------------------- servo pin and pulse data
   const int servoPin = 7;
   const int pulseMin=1000;
   const int pulseMax=2000;
 
-// --------------------------------------------------- pinos do motor
+// --------------------------------------------------- motor pins to L298D
   const int mEpin1 =A3;                                  
   const int mEpin2 =A2;
   const int mDpin1 =A4;                                  
