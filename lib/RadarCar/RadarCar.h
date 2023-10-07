@@ -20,15 +20,20 @@ enum motorId{rightMotor,leftMotor,bothMotors};
 */
 class RadarCar {
   private:
-    const int m_defaultTurnSpeed{150};
-    const int m_defaultTurnInterval{800};
-    const int m_minObstacleDistance{30};
-    Motor MD;
-    Motor ME;
-    Radar radar;
-    struct obstacleInfo obstacle{};
-    int m_actualTurnSpeed{m_defaultTurnSpeed};
-    int m_actualTurnInterval{m_defaultTurnInterval};
+    
+    Motor MD;             ///< right motor object
+    Motor ME;             ///< left motor object
+    Radar radar;          ///< radar object
+
+    struct obstacleInfo obstacle{}; ///< obstacle info
+
+    const int m_defaultTurnSpeed   {150}; ///< defautl turn speed
+    const int m_defaultTurnInterval{800}; ///< defautl turn interval
+    const int m_minObstacleDistance{30};  ///< min obstacle distance
+    const int headPosition         {90};  ///< servo ahead position
+
+    int m_actualTurnSpeed{m_defaultTurnSpeed}; ///< actual turn speed
+    int m_actualTurnInterval{m_defaultTurnInterval}; ///< actual turn interval
 
    public:
     RadarCar(){};
@@ -45,7 +50,8 @@ class RadarCar {
     /// @param servoPin servo motor pin
     /// @param pulseMin servo motor pulse min
     /// @param pulseMax servo motor pulse max
-    RadarCar(const int mEpin1, const int mEpin2, const int mDpin1, const int mDpin2
+    RadarCar(const int mEpin1, const int mEpin2
+            , const int mDpin1, const int mDpin2
             , const int mEhab, const int mDhab
             ,const int trigPin, const int echoPin
             , const int servoPin, const int pulseMin,const int pulseMax);
@@ -129,4 +135,4 @@ class RadarCar {
   
 };
 
-#endif
+#endif  //_RADARCAR_H

@@ -2,33 +2,39 @@
  
     Radar::Radar(const int trigPin, const int echoPin
       , const int servoPin, const int pulseMin,const int pulseMax) 
+
       : ultrasonic{trigPin,echoPin}
       ,m_servoPin{servoPin},m_pulseMin{pulseMin},m_pulseMax{pulseMax}
     {
+      // do not attach servo inside class constructor
+      // attaching the servo inside the main script setup()
     }
     
     float Radar::getDistanceAhead(){
-        servo.write(90);
+        servo.write(headPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }
+
     float Radar::getDistanceRight(){
-        servo.write(1);
+        servo.write(rightPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }
+
     float Radar::getDistanceDiagRight(){
-        servo.write(40);
+        servo.write(diagRightPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }
+
     float Radar::getDistanceLeft(){
-        servo.write(179);
+        servo.write(leftPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }
     float Radar::getDistanceDiagLeft(){
-        servo.write(140);
+        servo.write(diagLeftPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }

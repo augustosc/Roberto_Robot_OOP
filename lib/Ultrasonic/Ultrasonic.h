@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-/// @brief Ultrasonic class to measure distances
+/// @brief Ultrasonic class to measure obstacle distances
 class Ultrasonic {
 
   private:
@@ -19,4 +19,4 @@ class Ultrasonic {
     float getDistance ();
 };
 
-#endif
+#endif  //_HCSR04_H

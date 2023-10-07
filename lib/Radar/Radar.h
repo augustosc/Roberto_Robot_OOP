@@ -8,14 +8,23 @@
 /// @brief Class Radar with a servo and an ultrasonic to find obstacles
 class Radar {
 private:
-    Servo servo;
-    Ultrasonic ultrasonic;
-    int m_servoID{};
-    const int m_servoPin{};
-    const int m_pulseMin{};
-    const int m_pulseMax{};
-    const int m_servoDelay{300};
-
+    Servo servo;                    ///< servo object
+    Ultrasonic ultrasonic;          ///< ultrasonic object
+    int m_servoID{};                ///< servoID
+    const int m_servoPin{};         ///< servo control pin
+    const int m_pulseMin{};         ///< servo pulse min
+    const int m_pulseMax{};         ///< servo pulse max
+   
+    
+public:
+    const int m_servoDelay{300};    ///< servo default delay after move
+    const int rightPosition     {1};
+    const int diagRightPosition {40};
+    const int headPosition      {90};
+    const int diagLeftPosition  {140};
+    const int leftPosition      {179};
+    
+    
 
 public:
     Radar(){};
@@ -65,4 +74,4 @@ public:
     /// @return ID
     int getServoID();
 };
-#endif
+#endif  //_RADAR_H

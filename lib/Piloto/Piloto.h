@@ -10,6 +10,8 @@ private:
     RadarCar Roberto;
     struct  obstacleInfo *obstacle;
 
+    const int debug{0};
+
 public:
 
     Piloto (RadarCar& Roberto);

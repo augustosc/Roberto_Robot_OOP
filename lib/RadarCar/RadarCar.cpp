@@ -1,13 +1,14 @@
 #include "RadarCar.h"
 
  //---------------------------------------------- constructor
-  RadarCar::RadarCar(const int mEpin1, const int mEpin2, const int mDpin1, const int mDpin2
-    , const int mEhab, const int mDhab
-    ,const int trigPin, const int echoPin
-    , const int servoPin, const int pulseMin,const int pulseMax)
-    :MD{mDpin1,mDpin2,mDhab}, ME{mEpin1,mEpin2,mEhab},radar{trigPin,echoPin,servoPin,pulseMin,pulseMax}
-    {
-    }
+  RadarCar::RadarCar(const int mEpin1, const int mEpin2
+    	, const int mDpin1, const int mDpin2
+      , const int mEhab, const int mDhab
+      ,const int trigPin, const int echoPin
+      , const int servoPin, const int pulseMin,const int pulseMax)
+
+      :MD{mDpin1,mDpin2,mDhab}, ME{mEpin1,mEpin2,mEhab},radar{trigPin,echoPin,servoPin,pulseMin,pulseMax}
+    {}
 
  //---------------------------------------------- methods
 
@@ -51,8 +52,8 @@
   }
   
   void RadarCar::lookAhead(){
-    radar.moveServo(90);
-    delay(300);
+    radar.moveServo(radar.headPosition);
+    delay(radar.m_servoDelay);
   }
 
   void RadarCar::mapAhead(){
@@ -140,7 +141,7 @@
     return m_actualTurnInterval;
   }
 
-   //----------------------------------------------  newSpeedoc
+
   void RadarCar::setMotorSpeed(int motorID,int newSpeed){
     switch(motorID) {
       case rightMotor:

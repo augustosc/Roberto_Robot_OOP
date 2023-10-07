@@ -40,7 +40,7 @@ class Motor {
     /// @brief set new speed to motor
     void setMotorSpeed(int newSpeed);
 
-    /// @brief reset motor speed to default
+    /// @brief reset motor to default speed
     void resetMotorSpeed();
 
     /// @brief get motor speed
@@ -51,4 +51,4 @@ class Motor {
   
 };
 
-#endif
+#endif  //_MOTOR_H
