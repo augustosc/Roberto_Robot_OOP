@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include "Motor.h"
 #include "Radar.h"
+#include "Dfplayer.h"
+#include "MyPins.h"
 
 
 ///@brief Contains obstacle distance info
@@ -12,18 +14,21 @@ struct obstacleInfo {
     float dist[5];  /*!< contains measured distances from obstacle */
 };
 
+/// @brief radar position
 enum radarPosition {right, diagRight, head, diagLeft, left};
+
+/// @brief motor ID
 enum motorId{rightMotor,leftMotor,bothMotors};
 
-/**
- * @brief RadarCar class with two motors and a radar
-*/
+
+ /// @brief Car with two motors and a radar
 class RadarCar {
   private:
     
     Motor MD;             ///< right motor object
     Motor ME;             ///< left motor object
     Radar radar;          ///< radar object
+    Dfplayer* myDFP;
 
     struct obstacleInfo obstacle{}; ///< obstacle info
 
@@ -32,29 +37,18 @@ class RadarCar {
     const int m_minObstacleDistance{30};  ///< min obstacle distance
     const int headPosition         {90};  ///< servo ahead position
 
+    const int maxStops {4};     ///< stops before message stop
+    int countStops{};           //< count nuber of stops
+
     int m_actualTurnSpeed{m_defaultTurnSpeed}; ///< actual turn speed
     int m_actualTurnInterval{m_defaultTurnInterval}; ///< actual turn interval
 
-   public:
-    RadarCar(){};
 
-    /// @brief RadarCar constructor
-    /// @param mEpin1 left motor L298 pin1
-    /// @param mEpin2 left motor L298 pin2
-    /// @param mDpin1 right motor L298 pin1
-    /// @param mDpin2 right motor L298 pin2
-    /// @param mEhab  left motor L298D pwm pin
-    /// @param mDhab  right motor L298D pwm pin
-    /// @param trigPin ultrasonic trigger pin
-    /// @param echoPin ultrasonic echo pin
-    /// @param servoPin servo motor pin
-    /// @param pulseMin servo motor pulse min
-    /// @param pulseMax servo motor pulse max
-    RadarCar(const int mEpin1, const int mEpin2
-            , const int mDpin1, const int mDpin2
-            , const int mEhab, const int mDhab
-            ,const int trigPin, const int echoPin
-            , const int servoPin, const int pulseMin,const int pulseMax);
+   public:
+
+  RadarCar( Dfplayer* DFP)
+      :MD{mDpin1,mDpin2,mDhab}, ME{mEpin1,mEpin2,mEhab},radar{trigPin,echoPin,servoPin,pulseMin,pulseMax}, myDFP{DFP}
+    {}
 
 
     /// @brief move car forward

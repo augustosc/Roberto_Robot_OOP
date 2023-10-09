@@ -1,16 +1,5 @@
 #include "RadarCar.h"
 
- //---------------------------------------------- constructor
-  RadarCar::RadarCar(const int mEpin1, const int mEpin2
-    	, const int mDpin1, const int mDpin2
-      , const int mEhab, const int mDhab
-      ,const int trigPin, const int echoPin
-      , const int servoPin, const int pulseMin,const int pulseMax)
-
-      :MD{mDpin1,mDpin2,mDhab}, ME{mEpin1,mEpin2,mEhab},radar{trigPin,echoPin,servoPin,pulseMin,pulseMax}
-    {}
-
- //---------------------------------------------- methods
 
   //---------------------------------------------- move
   void RadarCar::moveForward (){
@@ -57,41 +46,55 @@
   }
 
   void RadarCar::mapAhead(){
-    obstacle.dist[head] = radar.getDistanceAhead();
+    obstacle.dist[head] = radar.getDistanceAhead(0);
     if (obstacle.dist[head] < m_minObstacleDistance){
         this->stopMove();
+        countStops++;
         obstacle.isClose = true;
     }
     else obstacle.isClose = false;
+    if (countStops > maxStops) {countStops=0; myDFP->sendMsgStop();}
   }
 
     
-  void RadarCar::mapFront(){
-    obstacle.dist[diagRight] = radar.getDistanceDiagRight();
-    obstacle.dist[diagLeft] = radar.getDistanceDiagLeft();
-    obstacle.dist[head] = radar.getDistanceAhead();
+  void RadarCar::mapFront()
+  {
+    obstacle.isClose = false;
+    obstacle.dist[diagRight] = radar.getDistanceDiagRight(100);
+    if (obstacle.dist[diagRight] < m_minObstacleDistance){
+        this->stopMove();
+        countStops++;
+        obstacle.isClose = true;
+        this->lookAhead();
+        delay(150);
+        return;
+    }
+  
+    obstacle.dist[diagLeft] = radar.getDistanceDiagLeft(250);
+    if (obstacle.dist[diagLeft] < m_minObstacleDistance){
+        this->stopMove();
+        countStops++;
+        obstacle.isClose = true;
+        this->lookAhead();
+        delay(150);
+        return;
+    }
 
+    obstacle.dist[head] = radar.getDistanceAhead(100);
     if (obstacle.dist[head] < m_minObstacleDistance){
         this->stopMove();
+        countStops++;
         obstacle.isClose = true;
     }
-    else if (obstacle.dist[diagRight] < m_minObstacleDistance){
-        this->stopMove();
-        obstacle.isClose = true;
-    }
-    else if (obstacle.dist[diagLeft] < m_minObstacleDistance){
-        this->stopMove();
-        obstacle.isClose = true;
-    }
-    else obstacle.isClose = false;
+    
   }
   
   
   void RadarCar::mapSide(){
-    obstacle.dist[diagRight]  = radar.getDistanceDiagRight();
-    obstacle.dist[right]      = radar.getDistanceRight();
-    obstacle.dist[diagLeft] = radar.getDistanceDiagLeft();
-    obstacle.dist[left]     = radar.getDistanceLeft();
+    obstacle.dist[diagRight]  = radar.getDistanceDiagRight(200);
+    obstacle.dist[right]      = radar.getDistanceRight(300);
+    obstacle.dist[diagLeft] = radar.getDistanceDiagLeft(500);
+    obstacle.dist[left]     = radar.getDistanceLeft(300);
     this->lookAhead();
   }
   

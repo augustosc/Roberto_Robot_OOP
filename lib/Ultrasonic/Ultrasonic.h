@@ -3,12 +3,14 @@
 
 #include "Arduino.h"
 
+
 /// @brief Ultrasonic class to measure obstacle distances
 class Ultrasonic {
 
   private:
     int m_trigPin;
     int m_echoPin;
+    const int distMax{150};
   
   public:
     Ultrasonic(){};
@@ -17,6 +19,7 @@ class Ultrasonic {
     /// @brief get distance from obstacle
     /// @return distance in cm
     float getDistance ();
+    
 };
 
 #endif  //_HCSR04_H

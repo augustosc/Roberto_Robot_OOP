@@ -6,7 +6,7 @@
 /// @brief Class to control DC motor by L298D driver
 class Motor {
   private:
-    const int m_defaultSpeed{130};
+    const int m_defaultSpeed{120};
     int m_actualMotorSpeed{m_defaultSpeed};
     int m_in1Pin{};
     int m_in2Pin{};

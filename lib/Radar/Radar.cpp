@@ -10,32 +10,32 @@
       // attaching the servo inside the main script setup()
     }
     
-    float Radar::getDistanceAhead(){
+    float Radar::getDistanceAhead(int _delay){
         servo.write(headPosition);
-        delay(m_servoDelay);
+        delay(_delay);
         return ultrasonic.getDistance();
     }
 
-    float Radar::getDistanceRight(){
+    float Radar::getDistanceRight(int _delay){
         servo.write(rightPosition);
-        delay(m_servoDelay);
+        delay(_delay);
         return ultrasonic.getDistance();
     }
 
-    float Radar::getDistanceDiagRight(){
+    float Radar::getDistanceDiagRight(int _delay){
         servo.write(diagRightPosition);
-        delay(m_servoDelay);
+        delay(_delay);
         return ultrasonic.getDistance();
     }
 
-    float Radar::getDistanceLeft(){
+    float Radar::getDistanceLeft(int _delay){
         servo.write(leftPosition);
         delay(m_servoDelay);
         return ultrasonic.getDistance();
     }
-    float Radar::getDistanceDiagLeft(){
+    float Radar::getDistanceDiagLeft(int _delay){
         servo.write(diagLeftPosition);
-        delay(m_servoDelay);
+        delay(_delay);
         return ultrasonic.getDistance();
     }
 

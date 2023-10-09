@@ -4,7 +4,8 @@
 #include "Arduino.h"
 #include "RadarCar.h"
 
-/// @brief Piloto class with Roberto (the radarCar)
+
+/// @brief drives Roberto Car
 class Piloto {
 private:
     RadarCar Roberto;

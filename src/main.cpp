@@ -1,76 +1,98 @@
-/*
- * Piloto Class
- */
 
 #include "Arduino.h"
 #include "Piloto.h"
+#include "Dfplayer.h"
+#include "IRcontrol.h"
+#include "MyPins.h"
 
-//-------------------------------------------------- globals
+
+
+
+//--------------------------- globals
 unsigned long timeout;
 unsigned long timeNow;
-const unsigned long tScanFrontal{4000};
-
-// --------------------------------------------------- ultrasonic pins
-const int trigPin = 9;
-const int echoPin = 10;
+const unsigned long tScanFront{700};
 
 
-// --------------------------------------------------- servo pin and pulse data
-  const int servoPin = 7;
-  const int pulseMin=1000;
-  const int pulseMax=2000;
 
-// --------------------------------------------------- motor pins to L298D
-  const int mEpin1 =A3;                                  
-  const int mEpin2 =A2;
-  const int mDpin1 =A4;                                  
-  const int mDpin2 =A5;
-  const int mDhab = 5;
-  const int mEhab = 6;
+/// @brief Roberto states
+enum carState {remoteControl, bluetooth, automatic};
+extern enum carState robertoState; 
+enum carState robertoState = automatic;  ///< initial Roberto state
   
-// --------------------------------------------------- create objects
+// ---------------------- Create objects
 
-RadarCar Roberto(mEpin1,mEpin2,mDpin1,mDpin2,mEhab,mDhab,trigPin,echoPin,servoPin,pulseMin,pulseMax);
-Piloto Clarinha(Roberto);
+Dfplayer myDFP (dfpRxPin, dfpTxPin, busyPin);
+
+RadarCar Roberto(&myDFP);
+
+Piloto Senna (Roberto);
+
+IRcontrol myIR(irPin, &Roberto, &myDFP);
 
 /////////////////////////////////////////////////////////
 void setup() {
   
-  Serial.begin(9600);
-  timeout=millis();
-
+  // init hardware serial
+  Serial.begin(115200);
+  
+  // init Roberto in automtic mode
+  //robertoState=automatic;
+  initLedControl();
+  ledControlOFF();
+ 
   // do not attach servo inside class constructor
   // attaching the servo inside the main script setup() 
   Roberto.radarAttach();
+
+  // init IRremote control
+  myIR.begin();
+
+
+  // init DFPlayer
+  myDFP.begin();
+
+  // set initial motor speed
+  Roberto.setMotorSpeed(bothMotors,115);
+  Roberto.setTurnSpeed(135);
   
   Roberto.lookAhead();
-  delay(200);
+  delay(100);
+
+  // better random
+  randomSeed(micros() % 43);
+
+  // Good Morning
+  myDFP.sendGoodMorning();
+  delay(500);
+
+  // init timeout to scanFrot()
+  timeout=millis();
 }
 
 //////////////////////////////////////////////////////////
 void loop() {
-  int robertoVeloc;
   
-  Serial.println("-------------------------");
-  Serial.print("Clarinha is running at : ");Serial.println(Roberto.getMotorSpeed(bothMotors));
-  
-  //------------------------------- scan left
-  Clarinha.scanAhead();
-  Clarinha.moveForward();
+  //-----------------------scan ahead
+  Senna.scanAhead();
+  Senna.moveForward();
 
-  //------------------------------- scan frontal
+  //-----------------------checK IR and BT
+  myIR.checkIRCommand();
+  //myBT.checKBTCommand();
+
+  //-----------------------scan front each 700ms
+
   timeNow = millis();
-  if (timeNow - timeout > tScanFrontal) {
+
+  if (timeNow - timeout > tScanFront) 
+  {
     timeout = timeNow;
-    
-    robertoVeloc = Roberto.getMotorSpeed(bothMotors); // change velocity
-    if ( robertoVeloc < 200) Roberto.setMotorSpeed(bothMotors, robertoVeloc+50);
-    else Roberto.setMotorSpeed(bothMotors,130);
-    
-    Clarinha.scanFront();
+    Senna.scanFront();
+    Senna.moveForward();
   }
   
-  delay(200);
+  delay(15);
   
 }
 ////////////////////////////////////////////////////////////

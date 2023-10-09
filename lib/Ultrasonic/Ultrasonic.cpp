@@ -1,6 +1,7 @@
 
 #include "Ultrasonic.h"
 
+const int debug {0};
 
 
 Ultrasonic::Ultrasonic(int trigPin, int echoPin) 
@@ -10,21 +11,30 @@ Ultrasonic::Ultrasonic(int trigPin, int echoPin)
   pinMode(m_echoPin, INPUT);
 }
 
-float Ultrasonic::getDistance(){
- float duration, distance;
- digitalWrite(m_trigPin, LOW);
- delayMicroseconds(2);
- digitalWrite(m_trigPin, HIGH);
- delayMicroseconds(10);
- digitalWrite(m_trigPin, LOW);
 
- duration = pulseIn(m_echoPin, HIGH);
- distance = (duration*.0343)/2;
+float Ultrasonic::getDistance()
+{
+
+ float distance{};
+
+  digitalWrite(m_trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(m_trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(m_trigPin, LOW);
+  distance=pulseIn(m_echoPin,HIGH)*0.01724;
+  delay(30);
+
+      
+if (distance > distMax) distance=30; 
+
+ if (debug) 
+{
+  Serial.print("getDistance: ");
+  Serial.println(distance);
+}
+
  return distance;
 
-
-    // int random = (rand() % 200);
-
-    // return static_cast< float >(20+random);
      
 }

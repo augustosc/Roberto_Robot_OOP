@@ -40,23 +40,23 @@ public:
 
     /// @brief measure obstacle distance ahead
     /// @return head distance
-    float getDistanceAhead();
+    float getDistanceAhead(int _delay);
 
     /// @brief measure obstacle distance at right
     /// @return right distance
-    float getDistanceRight();
+    float getDistanceRight(int _delay);
 
     /// @brief measure obstacle distance at diagonal right
     /// @return diagonal right distance
-    float getDistanceDiagRight();
+    float getDistanceDiagRight(int _delay);
 
     /// @brief measure obstacle distance at left
     /// @return left distance
-    float getDistanceLeft();
+    float getDistanceLeft(int _delay);
 
     /// @brief measure obstacle distance at diagonal left
     /// @return diagonal left distance
-    float getDistanceDiagLeft();
+    float getDistanceDiagLeft(int _delay);
 
     /// @brief move servo head to specified position
     /// @param angle servo position: from 0 to 180 degree
