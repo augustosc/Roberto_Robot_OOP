@@ -4,3 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 test
+MyConstants.cpp.txt
+MyConstants.h.txt
+compile_commands.json
+

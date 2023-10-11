@@ -1,98 +1,99 @@
 
 #include "Arduino.h"
+#include "SoftwareSerial.h"
 #include "Piloto.h"
 #include "Dfplayer.h"
-#include "IRcontrol.h"
-#include "MyPins.h"
+#include "IR.h"
+#include "Led.h"
+#include "BT.h"
+#include "CarState.h"
+#include "DfpGpio.h"
+#include "LedGpio.h"
+#include "BtGpio.h"
 
+//"""""""""""""""""""""""" set initial Roberto state
+CarState robertoState{CarState::automatic};
 
+//"""""""""""""""""""""""" my objects
 
+SoftwareSerial Bt(BtGpio::BTrxPin, BtGpio::BTtxPin);
 
-//--------------------------- globals
-unsigned long timeout;
-unsigned long timeNow;
-const unsigned long tScanFront{700};
+DFPLAYER::Dfplayer myDFP(DfpGpio::dfpRxPin, DfpGpio::dfpTxPin, DfpGpio::busyPin); 
 
+RADARCAR::RadarCar Roberto(&myDFP); 
 
+Piloto Senna(Roberto, &Bt);
 
-/// @brief Roberto states
-enum carState {remoteControl, bluetooth, automatic};
-extern enum carState robertoState; 
-enum carState robertoState = automatic;  ///< initial Roberto state
-  
-// ---------------------- Create objects
+LED::Led ledControl(LedGpio::ledControlPin, true);
 
-Dfplayer myDFP (dfpRxPin, dfpTxPin, busyPin);
+BT myBT(&Roberto, &myDFP, &ledControl, &Bt);
 
-RadarCar Roberto(&myDFP);
-
-Piloto Senna (Roberto);
-
-IRcontrol myIR(irPin, &Roberto, &myDFP);
+IR myIR(&Roberto, &myDFP, &ledControl, &Bt);
 
 /////////////////////////////////////////////////////////
-void setup() {
-  
+void setup()
+{
   // init hardware serial
   Serial.begin(115200);
-  
-  // init Roberto in automtic mode
-  //robertoState=automatic;
-  initLedControl();
-  ledControlOFF();
- 
+
   // do not attach servo inside class constructor
-  // attaching the servo inside the main script setup() 
+  // attaching the servo inside the main script setup()
   Roberto.radarAttach();
 
-  // init IRremote control
-  myIR.begin();
+  // Positions radar ahead
+  Roberto.lookAhead();
 
+  // set initial motor speed
+  Roberto.setMotorSpeed(115);
+  Roberto.setTurnSpeed(135);
 
   // init DFPlayer
   myDFP.begin();
 
-  // set initial motor speed
-  Roberto.setMotorSpeed(bothMotors,115);
-  Roberto.setTurnSpeed(135);
-  
-  Roberto.lookAhead();
-  delay(100);
+  // init IR remote control
+  myIR.begin();
 
   // better random
   randomSeed(micros() % 43);
 
-  // Good Morning
-  myDFP.sendGoodMorning();
+  // play Good Morning message
+  myDFP.playGoodMorningMsg();
   delay(500);
 
-  // init timeout to scanFrot()
-  timeout=millis();
+  // init BT remote control
+  myBT.begin(9600);
+  delay(100);
+
+  // set BT as listening
+  myBT.listen();
 }
 
 //////////////////////////////////////////////////////////
-void loop() {
-  
-  //-----------------------scan ahead
+void loop()
+{
+
+  constexpr unsigned long ScanFrontTimeout{700}; ///< scanFront timeout
+  static unsigned long lastScanTime{millis()};   ///< used for scanFront timeout
+  static unsigned long timeNow;                  ///< used for scanFront timeout
+
+  //""""""""""""""""""""""""scan ahead
   Senna.scanAhead();
   Senna.moveForward();
 
-  //-----------------------checK IR and BT
+  //"""""""""""""""""""""""" checK IR or BT command
   myIR.checkIRCommand();
-  //myBT.checKBTCommand();
+  myBT.checkBTcommand();
 
-  //-----------------------scan front each 700ms
-
+  //"""""""""""""""""""""""" scan front each 700ms
   timeNow = millis();
 
-  if (timeNow - timeout > tScanFront) 
+  if (timeNow - lastScanTime > ScanFrontTimeout)
   {
-    timeout = timeNow;
+    lastScanTime = timeNow;
     Senna.scanFront();
     Senna.moveForward();
   }
-  
+
   delay(15);
-  
 }
 ////////////////////////////////////////////////////////////

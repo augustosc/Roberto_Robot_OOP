@@ -5,54 +5,79 @@
 #include "Motor.h"
 #include "Radar.h"
 #include "Dfplayer.h"
-#include "MyPins.h"
 
 
-///@brief Contains obstacle distance info
-struct obstacleInfo {
-    bool isClose;   /*!< set if obstacle is closer */
-    float dist[5];  /*!< contains measured distances from obstacle */
-};
+namespace RADARCAR
+{
 
-/// @brief radar position
-enum radarPosition {right, diagRight, head, diagLeft, left};
+  ///@brief Contains obstacle distance info
+  struct obstacleInfo
+  {
+    bool isClose;      /*!< set if obstacle is closer */
+    float distance[5]; /*!< array contains measured distances from obstacle */
+  };
 
-/// @brief motor ID
-enum motorId{rightMotor,leftMotor,bothMotors};
+  /// @brief radar position
+  enum radarPosition
+  {
+    right,
+    diagRight,
+    head,
+    diagLeft,
+    left
+  };
 
+  /// @brief motor ID
+  enum MotorId
+  {
+    rightMotor,
+    leftMotor,
+    bothMotors
+  };
 
- /// @brief Car with two motors and a radar
-class RadarCar {
+  /// @brief Car with two motors, a DFP and a radar
+  class RadarCar
+  {
+
+  private:
+    MOTOR::Motor MD;           ///< right motor object
+    MOTOR::Motor ME;           ///< left motor object
+    RADAR::Radar radar;        ///< radar object
+    DFPLAYER::Dfplayer *myDFP; ///< DFP object
+  
+    struct obstacleInfo obstacle
+    {
+    }; ///< obstacle info
+
   private:
     
-    Motor MD;             ///< right motor object
-    Motor ME;             ///< left motor object
-    Radar radar;          ///< radar object
-    Dfplayer* myDFP;
+    /*************************************************
+     * Adjust HERE the speed of the motors, according to 
+     * the hardware, so as to keep the car in balance
+    **************************************************/
+    const int m_leftMotorSpeed{117};                  ///< left Motor speed
+    const int m_rightMotorSpeed{120};                 ///< right Motor speed
+    
+    const int m_defaultTurnSpeed{150};                ///< defautl turn speed
+    const int m_defaultTurnInterval{500};             ///< defautl turn interval
+    int m_currentTurnSpeed{m_defaultTurnSpeed};       ///< current turn speed
+    int m_currentTurnInterval{m_defaultTurnInterval}; ///< current turn interval
+    const int m_minObstacleDistance{30};              ///< min obstacle distance
+    const int m_maxStops{3};                          ///< stops before message stop
+    int m_countStops{};                               ///< count nuber of stops
+    const unsigned long m_stopMsgDuration{3000};      ///< max stopMsg duration
+    unsigned long m_timeStopMsgStarted{};             ///< time stopMsg started
+    bool m_isSpeakingMsgOnPause{};                    ///< flags playing msg on dfp pause
 
-    struct obstacleInfo obstacle{}; ///< obstacle info
 
-    const int m_defaultTurnSpeed   {150}; ///< defautl turn speed
-    const int m_defaultTurnInterval{800}; ///< defautl turn interval
-    const int m_minObstacleDistance{30};  ///< min obstacle distance
-    const int headPosition         {90};  ///< servo ahead position
+  public:
 
-    const int maxStops {4};     ///< stops before message stop
-    int countStops{};           //< count nuber of stops
-
-    int m_actualTurnSpeed{m_defaultTurnSpeed}; ///< actual turn speed
-    int m_actualTurnInterval{m_defaultTurnInterval}; ///< actual turn interval
-
-
-   public:
-
-  RadarCar( Dfplayer* DFP)
-      :MD{mDpin1,mDpin2,mDhab}, ME{mEpin1,mEpin2,mEhab},radar{trigPin,echoPin,servoPin,pulseMin,pulseMax}, myDFP{DFP}
-    {}
-
+    /// @brief Car with 2 motors, a radar and Dfplayer mini
+    /// @param DFP DFplayer object by aggregation
+    RadarCar(DFPLAYER::Dfplayer *DFP);
 
     /// @brief move car forward
-    void moveForward();   
+    void moveForward();
 
     /// @brief move car backward
     void moveBackward();
@@ -69,6 +94,9 @@ class RadarCar {
     /// @brief attach radar servo motor
     void radarAttach();
 
+    /// @brief detach radar servo motor
+    void radarDetach();
+
     /// @brief point radar ahead
     void lookAhead();
 
@@ -81,52 +109,63 @@ class RadarCar {
     /// @brief map obstacle distance left, diagonal left, right and diagonal right
     void mapSide();
 
-    /// @brief check free side to turn car
-    /// @return true if right is free to turn
+    /// @brief check best side to turn the car
+    /// @return true if right
     bool shouldTurnRight();
-    
+
     /// @brief return struct obstacleInfo
     /// @return pointer to obstacleInfo
-    struct obstacleInfo * getObstacleInfo();
+    struct obstacleInfo *getObstacleInfo();
 
     /// @brief set turn new turn speed
-    /// @param newTurnSpeed 
+    /// @param newTurnSpeed new speed
     void setTurnSpeed(int newTurnSpeed);
 
     /// @brief reset turn speed to default
     void resetTurnSpeed();
 
-    /// @brief get actual turn speed
-    /// @return actual turn speed
+    /// @brief get current turn speed
+    /// @return current turn speed
     int getTurnSpeed();
 
     /// @brief set new turn interval
-    /// @param newIntervalSpeed 
+    /// @param newIntervalSpeed new speed
     void setTurnInterval(int newInterval);
 
     /// @brief reset interval to default
     void resetTurnInterval();
 
-    /// @brief get actual interval
-    /// @return actual interval
+    /// @brief get current interval
+    /// @return current interval
     int getTurnInterval();
 
     /// @brief set new motor speed
-    /// @param motorID 
-    /// @param newSpeed 
-    void setMotorSpeed(int motorID,int newSpeed);
+    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
+    /// @param newSpeed new speed
+    void setMotorSpeed(int motorID, int newSpeed);
+
+    /// @brief set new motor speed
+    /// @param newSpeed new speed
+    void setMotorSpeed(int newSpeed);
 
     /// @brief reset motor speed to default
-    /// @param motorID 
-    void resetMotorSpeed(int motorID);
+    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
+    void resetMotorSpeed(int motorID = bothMotors);
 
-    /// @brief get actual motor speed
-    /// @param motorID 
-    /// @return actual motor speed
-    int getMotorSpeed(int motorID);
+    /// @brief get current motor speed
+    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
+    /// @return current motor speed
+    int getMotorSpeed(int motorID = bothMotors);
 
+    /// @brief play stop message
+    void speakStopMsg();
 
-  
-};
+    /// @brief check max stop has been reached
+    void checkMaxStops();
 
-#endif  //_RADARCAR_H
+    /// @brief check msg stop on pause to pause music
+    void checkStopMsgOnPause();
+  };
+
+} // namespace RADARCAR
+#endif //_RADARCAR_H

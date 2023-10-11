@@ -3,54 +3,59 @@
 
 #include <Arduino.h>
 #include "SoftwareSerial.h"
+/**
+ * SoftwareSerial disables interrupts while transmitting data, so it conflicts with Servo library.
+ */
 #include "DFRobotDFPlayerMini.h"
 
-/// @brief Dfplayer class manage DFplayer Mini
-class Dfplayer {
-   
-public:
-    
-    DFRobotDFPlayerMini dfp;    ///< dfp object
-    SoftwareSerial dfpSerial;   ///< dfp software serial
 
-public:
-    const int m_busyPin{};  ///< DFP busy pin (LOW when busy)
-    int musicaAtual {1};    ///< DFP music in play
-    int volumeAtual {18};   ///< actual volume from 0 t0 30
-    int msgAtual {};        ///< saves actual "bom dia" message
-    int msgBomDia {1};      
-    long nArqvMsgStop{};    ///< quantity of msgStops
-    long nArqvMsgBomDia{};  ///< quantity of MsgBomDia
-    long nArqvMp3{};        ///< quantity music files
-    long nArqvMenu{};       ///< quantity menu files
-    bool radioON {0};       ///< manage radio in continuos mode
-    bool pauseRadio {0};
+namespace DFPLAYER
+{
+    /// @brief manage DFplayer Mini
+    class Dfplayer
+    {
+    public:
+        DFRobotDFPlayerMini dfp;  ///< dfp object
+        SoftwareSerial dfpSerial; ///< dfp software serial
 
-    Dfplayer (const uint8_t rxPin, const uint8_t txPin, const int busyPin)
-    : dfp{}, dfpSerial{rxPin,txPin}, m_busyPin{busyPin}
-    {}
+    public: // MUST be public to guarantee access of DFP parameters to other objects
+        const int m_busyPin{};         ///< DFP busy pin (LOW when busy)
+        int m_currentMusic{1};         ///< DFP current music in play
+        int m_currentVolume{18};       ///< DFP current volume 0~30
+        int m_goodMorningMsg{1};       ///< sequential 'good morning' message
+        long m_nStopMsgFiles{};        ///< quantity of 'stop' messages
+        long m_nGoodMorningMsgFiles{}; ///< quantity of 'good morning' files
+        long m_nMp3Files{};            ///< quantity of mp3 files
+        long m_nMenuFiles{};           ///< quantity of menu files
+        bool m_radioON{0};             ///< manage radio in continuos mode
+        bool m_isPaused{0};            ///< flags radio in pause
 
+    public:
+        /// @brief Constructor Dfplayer
+        Dfplayer(uint8_t rxPin, uint8_t txPin, int busyPin);
 
-    /// @brief init DFP
-    void begin();
-    
-    /// @brief play Stop messages
-    void sendMsgStop();
+        /// @brief init DFP
+        void begin();
 
-    /// @brief play Good Morning messages
-    void sendGoodMorning();
+        /// @brief play Stop message
+        void playStopMsg();
 
-    /// @brief set actual volume
-    /// @param vol from 0 to 30
-    void setVolume(int vol);
+        /// @brief play Good Morning message
+        void playGoodMorningMsg();
 
+        /// @brief set actual volume
+        /// @param vol from 0 to 30
+        void setVolume(int vol);
 
+        /// @brief read dfp busy pin
+        /// @return state of dfp busy pin
+        int readBusyPin();
 
-    
+        /// @brief get dfp state
+        /// @return 00-playback_finish 01-playing 02-paused 08-sleeping
+        int readState();
+    };
 
+} // namespace DFPLAYER
 
-
-};
-
-
-#endif  //_DFPLAYER_H
+#endif //_DFPLAYER_H

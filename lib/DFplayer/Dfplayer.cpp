@@ -1,131 +1,199 @@
 
 #include "Dfplayer.h"
 
+// #define _DEBUG
 
-void Dfplayer::begin()
+namespace DFPLAYER
 {
-    // wait DFPlayer
-    delay(2000);
-
-    // init DFPlayer serial
-    dfpSerial.begin(9600);
-    
-    
-    // check DFPlayer connected and SD card inserted
-    int tentativa=1;
-    while (!dfp.begin(dfpSerial) && tentativa<4) 
+    Dfplayer::Dfplayer(uint8_t rxPin, uint8_t txPin, int busyPin)
+        : dfp{}, dfpSerial{rxPin, txPin}, m_busyPin{busyPin}
     {
-        Serial.println(F("SD card error, check connection"));
-        //BT.println(F("SD card error, check connection"));
-        tentativa++;
-        delay(1000);
     }
-    if (tentativa == 4 && !dfp.begin(dfpSerial)) 
+
+    //""""""""""""""""""""""
+
+    void Dfplayer::begin()
     {
-        Serial.println("DFplayer OFF");
-        //BT.println("DFplayer OFF");
+        // wait DFPlayer
+        delay(2000);
+
+        // init DFPlayer serial
+        dfpSerial.begin(9600);
+        delay(200);
+
+        // assure dfPSerial is listening
+        dfpSerial.listen();
+
+        // check DFPlayer connected and SD card inserted
+        int tentativa = 1;
+
+        /**
+         * dfp.begin MUST TO BE INITIALIZED WITH (dfpSerial,false) to work properly)
+         */
+        while (!dfp.begin(dfpSerial, false) && tentativa < 4)
+        {
+            Serial.println(F("SD card error, check connection"));
+            // BT.println(F("SD card error, check connection"));
+            tentativa++;
+            delay(1000);
+        }
+        if (tentativa == 4 && !dfp.begin(dfpSerial))
+        {
+            Serial.println("DFplayer OFF");
+            // BT.println("DFplayer OFF");
+        }
+        else
+        {
+            Serial.println(F("DFPlayer ON ..."));
+            // BT.println(F("DFPlayer ON ..."));
+
+            // Continue  DFplayer init
+            dfp.setTimeOut(500); ///< Set serial communictaion time out 500ms
+
+            dfp.volume(m_currentVolume); ///< Set volume value (0~30)
+
+            // check initial volume
+            Serial.print("m_currentVolume: ");
+            Serial.println(dfp.readVolume());
+
+            dfp.EQ(DFPLAYER_EQ_NORMAL); ///< set equalizer
+            Serial.print("Equalizer: ");
+            Serial.println(dfp.readEQ());
+
+            dfp.outputDevice(DFPLAYER_DEVICE_SD); ///< set SD card output
+
+            // check number of "STOP messages"
+            m_nStopMsgFiles = -1;
+            int j = 0;
+            while (m_nStopMsgFiles == -1 && j < 5)
+            {
+                m_nStopMsgFiles = dfp.readFileCountsInFolder(2);
+                j++;
+                delay(200);
+            }
+            if (m_nStopMsgFiles == -1)
+                m_nStopMsgFiles = 21;
+            Serial.print(F("n. of Stop messages: "));
+            Serial.println(m_nStopMsgFiles);
+            // BT.print("# of Stop messages: ");BT.println(nStopMsgFiles);
+
+            // check number of "good morning" messages
+            m_nGoodMorningMsgFiles = -1;
+            j = 0;
+            while (m_nGoodMorningMsgFiles == -1 && j < 5)
+            {
+                m_nGoodMorningMsgFiles = dfp.readFileCountsInFolder(1);
+                j++;
+                delay(200);
+            }
+            if (m_nGoodMorningMsgFiles == -1)
+                m_nGoodMorningMsgFiles = 13;
+            Serial.print(F("n. of good morning messages: "));
+            Serial.println(m_nGoodMorningMsgFiles);
+            // BT.print("# of good morning messages: ");BT.println(nGoodMorningMsgFiles);
+
+            // check number of MP3 musics
+            m_nMp3Files = -1;
+            j = 0;
+            while (m_nMp3Files == -1 && j < 5)
+            {
+                m_nMp3Files = dfp.readFileCountsInFolder(3);
+                j++;
+                delay(200);
+            }
+            if (m_nMp3Files == -1)
+                m_nMp3Files = 12;
+            Serial.print(F("n. of MP3 musics "));
+            Serial.println(m_nMp3Files);
+            // BT.print("# of MP3 musics ");BT.println(nMp3Files);
+
+            // check Menu message"
+            m_nMenuFiles = -1;
+            j = 0;
+            while (m_nMenuFiles == -1 && j < 5)
+            {
+                m_nMenuFiles = dfp.readFileCountsInFolder(4);
+                j++;
+                delay(200);
+            }
+            if (m_nMenuFiles == -1)
+                m_nMenuFiles = 1;
+            Serial.print(F("Menu message: "));
+            Serial.println(m_nMenuFiles);
+            // BT.print("Menu message: ");BT.println(nMenuFiles);
+        }
     }
-    else 
+
+    //""""""""""""""""""""""
+
+    void Dfplayer::playStopMsg()
     {
-        Serial.println(F("DFPlayer ON ..."));
-        //BT.println(F("DFPlayer ON ..."));
-    
-        // Continue  DFplayer init
-        dfp.setTimeOut(500);        ///< Set serial communictaion time out 500ms
-        dfp.volume(volumeAtual);    ///<Set volume value (0~30)
-        dfp.EQ(DFPLAYER_EQ_NORMAL); ///< set equalizer
-        dfp.outputDevice(DFPLAYER_DEVICE_SD);  ///< set SD card output
-    
+        int randomStopMsg = random(1, m_nStopMsgFiles + 1);
+        bool busy = !digitalRead(m_busyPin);
 
-        // check number of "STOP messages"
-        nArqvMsgStop=-1;
-        int j=0;
-        while (nArqvMsgStop == -1 && j < 5)  
+        // if Roberto is playing music, play Stop message on Advertisement folder
+        // if (m_radioON || busy)
+        if (m_radioON || busy)
         {
-            nArqvMsgStop= dfp.readFileCountsInFolder(2);
-            j++;
-            delay(200);
+#ifdef _DEBUG
+            Serial.print("advertise mode, busyPin = ");
+            Serial.print(!busy);
+            Serial.print("\tDFP state = ");
+            Serial.println(readState());
+            delay(100);
+#endif
+            dfp.advertise(randomStopMsg);
+            delay(100);
         }
-        if (nArqvMsgStop == -1) nArqvMsgStop=21;
-        Serial.print("# of Stop messages: ");Serial.println(nArqvMsgStop);
-        //BT.print("# of Stop messages: ");BT.println(nArqvMsgStop);
-
-        // check number of "good morning" messages
-        nArqvMsgBomDia=-1;
-        j=0;
-        while (nArqvMsgBomDia == -1 && j < 5)  
+        else
         {
-            nArqvMsgBomDia= dfp.readFileCountsInFolder(1);
-            j++;
-            delay(200);
+            dfp.playFolder(2, randomStopMsg);
+#ifdef _DEBUG
+            Serial.print("normal mode, busyPin = ");
+            Serial.print(!busy);
+            Serial.print("\tDFP state = ");
+            Serial.println(readState());
+#endif
         }
-        if (nArqvMsgBomDia == -1) nArqvMsgBomDia=13;
-        Serial.print("# of good morning messages: ");Serial.println(nArqvMsgBomDia);
-        //BT.print("# of good morning messages: ");BT.println(nArqvMsgBomDia);
-    
-        // check number of MP3 musics
-        nArqvMp3=-1;
-        j=0;
-        while (nArqvMp3 == -1 && j < 5)  
-        {
-            nArqvMp3= dfp.readFileCountsInFolder(3);
-            j++;
-            delay(200);
-        }
-        if (nArqvMp3 == -1) nArqvMp3=12;
-        Serial.print("# of MP3 musics ");Serial.println(nArqvMp3);
-        //BT.print("# of MP3 musics ");BT.println(nArqvMp3);
-    
-        // check Menu message"
-        nArqvMenu=-1;
-        j=0;
-        while (nArqvMenu == -1 && j < 5)  
-        {
-            nArqvMenu= dfp.readFileCountsInFolder(4);
-            j++;
-            delay(200);
-        }
-        if (nArqvMenu == -1) nArqvMenu=1;
-        Serial.print("Menu message: ");Serial.println(nArqvMenu);
-        //BT.print("Menu message: ");BT.println(nArqvMenu);
     }
-}
 
-void Dfplayer::sendMsgStop() 
-{
-    bool notBusy{};
-    long sustoMsg=random(1,nArqvMsgStop+1);
-    
-    // if Roberto is listening radio, play Stop message on Advertisement folder
-    if (radioON) 
-    {       
-        dfp.advertise(sustoMsg);
-    }
-    else 
+    //""""""""""""""""""""""
+
+    void Dfplayer::playGoodMorningMsg()
     {
-        notBusy=digitalRead(m_busyPin);
-        if (notBusy) 
+        uint8_t randomMsg = random(1, m_nGoodMorningMsgFiles + 1);
+        bool busy = !digitalRead(m_busyPin);
+        if (!busy)
         {
-            dfp.playFolder(2,sustoMsg);
+            dfp.playFolder(1, randomMsg);
         }
     }
-}
 
-void Dfplayer::sendGoodMorning() 
-{
-    bool notBusy{};
-    msgAtual=random(1,nArqvMsgBomDia+1);
-    notBusy=digitalRead(m_busyPin);     
-    if (notBusy) 
+    //""""""""""""""""""""""
+
+    void Dfplayer::setVolume(int vol)
     {
-        dfp.playFolder(1,msgAtual);
+        m_currentVolume = vol;
+        dfp.volume(m_currentVolume);
     }
 
-}
+    //""""""""""""""""""""""
 
-void Dfplayer::setVolume(int vol)
-{
-    volumeAtual = vol;
-}
+    int Dfplayer::readBusyPin()
+    {
+        return digitalRead(m_busyPin);
+    }
 
+    //""""""""""""""""""""""
 
+    int Dfplayer::readState()
+    {
+        dfpSerial.listen();
+
+        int state = dfp.readState();
+        delay(100);
+
+        return state;
+    }
+
+} // namespace DFPLAYER {

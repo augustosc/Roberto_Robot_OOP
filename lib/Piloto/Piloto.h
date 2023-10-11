@@ -2,21 +2,23 @@
 #define _PILOTO_h
 
 #include "Arduino.h"
+#include "SoftwareSerial.h"
 #include "RadarCar.h"
 
-
 /// @brief drives Roberto Car
-class Piloto {
+class Piloto
+{
 private:
-    RadarCar Roberto;
-    struct  obstacleInfo *obstacle;
-
-    const int debug{0};
+    RADARCAR::RadarCar Roberto;
+    struct RADARCAR::obstacleInfo *obstacle;
+    SoftwareSerial *bt;
 
 public:
+    /// @brief drives Roberto
+    /// @param Roberto Car object by aggregation
+    /// @param _bt bluetooth object by aggregation
+    Piloto(RADARCAR::RadarCar &Roberto, SoftwareSerial *_bt);
 
-    Piloto (RadarCar& Roberto);
-    
     /// @brief move Roberto forward
     void moveForward();
 
@@ -29,16 +31,19 @@ public:
     /// @brief turn Roberto left
     void turnLeft();
 
+    /// @brief make the turn to avoid obstacle
+    void makeTheTurn();
+
     /// @brief stop Roberto
     void stopMove();
 
     /// @brief Roberto look ahead
     void lookAhead();
-    
-    /// @brief scan obstacles ahead and turn if necessary
+
+    /// @brief scan obstacles ahead and make the turn if necessary
     void scanAhead();
 
-    /// @brief scan obstacles front (ahead and diagonals) and turn if necessary
+    /// @brief scan obstacles front (ahead and diagonals) and make the turn if necessary
     void scanFront();
 
     /// @brief attach servo motor
@@ -46,9 +51,7 @@ public:
 
     /// @brief get obstacle distance info
     /// @return obstacle Info struct pointer
-    struct obstacleInfo * getObstacleInfo();
-    
-    
+    struct RADARCAR::obstacleInfo *getObstacleInfo();
 };
 
 #endif
