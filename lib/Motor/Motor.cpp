@@ -3,7 +3,8 @@
 namespace MOTOR
 {
 
-  //"""""""""""""""""""""""" construtor
+  //"""""""""""""""""""""""" construtor definition
+
   Motor::Motor(const uint8_t in1Pin, const uint8_t in2Pin, const uint8_t inpwmPin)
       : m_in1Pin{in1Pin}, m_in2Pin{in2Pin}, m_inpwmPin{inpwmPin}
   {
@@ -74,7 +75,7 @@ namespace MOTOR
 
   //""""""""""""""""""""""""
 
-  int Motor::getMotorSpeed()
+  const int Motor::getMotorSpeed()
   {
     return m_currentMotorSpeed;
   }

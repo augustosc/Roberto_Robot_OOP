@@ -3,7 +3,7 @@
 namespace LED
 {
 
-  //"""""""""""""""""""""""" constructor
+  //"""""""""""""""""""""""" constructor definition
 
   Led::Led(uint8_t pin, bool reverse = false)
       : m_pin{pin}, m_reverse{reverse}
@@ -11,7 +11,7 @@ namespace LED
     begin();
   }
 
-  //""""""""""""""""""""""""
+  //""""""""""""""""""""""""public member functions
 
   void Led::begin()
   {
@@ -48,10 +48,10 @@ namespace LED
   void Led::blink(const unsigned long interval)
   {
     unsigned long now = millis();
-    if (now - m_previousToggle > interval)
+    if (now - m_previousToggleTime > interval)
     {
       toggle();
-      m_previousToggle = now;
+      m_previousToggleTime = now;
     }
   }
 } // namespace LED

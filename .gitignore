@@ -7,4 +7,5 @@ test
 MyConstants.cpp.txt
 MyConstants.h.txt
 compile_commands.json
+UML models/
 

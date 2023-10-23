@@ -6,9 +6,9 @@
 namespace DfpGpio {
     // DFPlayer control pins
 
-    constexpr uint8_t dfpRxPin    {10};
-    constexpr uint8_t dfpTxPin    {9};
-    constexpr int busyPin         {8};
+    constexpr uint8_t dfpRxPin    {10}; ///< DFP Rx pin
+    constexpr uint8_t dfpTxPin    {9};  ///< DFP Tx pin
+    constexpr int busyPin         {8};  ///< DFP busy pin
 
 }
 

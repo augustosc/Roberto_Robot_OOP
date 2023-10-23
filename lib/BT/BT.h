@@ -1,54 +1,43 @@
 #ifndef _BT_H
 #define _BT_H
 
-#include "SoftwareSerial.h"
 /**
  * SoftwareSerial disables interrupts while transmitting data, so it conflicts with Servo library.
  */
-#include "RadarCar.h"
-#include "Dfplayer.h"
+#include "SoftwareSerial.h"
+#include "SelfCar.h"
 #include "Led.h"
 
-/// @brief manage Roberto's BT remote control
+
+//""""""""""""""""""""""""class
+
+/// @brief class to manage Roberto's BT remote control
 class BT
 {
+
+//""""""""""""""""""""""""private object aggregation
 private:
-    RADARCAR::RadarCar *Roberto; ///< ponter to Roberto object
-    DFPLAYER::Dfplayer *myDFP;   ///< pointer DFP object
+    SelfCar * Roberto;
     LED::Led *ledCtrl;           ///< pointer Led object
 
-private:
-    //  Bluetooth keys
-    static const char _fwd = 'f';
-    static const char _bwd = 'b';
-    static const char _right = 'r';
-    static const char _left = 'l';
-    static const char _stop = 'x';
-    static const char _go = '*';
-    static const char _bt = 't';
-    static const char _volMinus = 'v';
-    static const char _volPlus = 'V';
-    static const char _radio = '#';
-    static const char _musMinus = 'm';
-    static const char _musPlus = 'M';
-    static const char _pause = 'p';
-    static const char _msgMinus = 'g';
-    static const char _msgPlus = 'G';
-    static const char _menu = 'o';
-    static const char _velMinus = 'w';
-    static const char _velPlus = 'W';
 
-private:
-    char m_BTcommand{};                     ///< BT received command
-    unsigned long m_BTLastTimeInLoop{};     ///< last time in radio loop
-    static const int m_BTLoopTimeout{3000}; ///< timeout to check busyPin in radio loop
-    int m_mSpeed{};                         ///< local motor speed
-
-
+//""""""""""""""""""""""""public object aggregation
 public:
     SoftwareSerial *bt; ///< Bluetooth object
 
-    BT(RADARCAR::RadarCar *Car, DFPLAYER::Dfplayer *dfp, LED::Led *led, SoftwareSerial *_bt);
+
+
+//""""""""""""""""""""""""constructor declaration
+
+    /// @brief constructor BT object
+    /// @param Car pointer to self car object (Roberto)
+    /// @param led pointer to Led object
+    /// @param _bt pointer to Bluetooth object
+    BT(SelfCar *Car, LED::Led *led, SoftwareSerial *_bt);
+
+
+
+//""""""""""""""""""""""""public member functions
 
     /// @brief init BT remote control
     /// @param baud serial baud rate
@@ -69,6 +58,37 @@ public:
 
     /// @brief receive and run remote BT commands
     void BTcommandLoop();
+
+
+
+//""""""""""""""""""""""""private data members
+private:
+    //  Bluetooth keys
+    static const char _forward = 'f';
+    static const char _backward = 'b';
+    static const char _turnRight = 'r';
+    static const char _turnLeft = 'l';
+    static const char _stop = 'x';
+    static const char _go = '*';
+    static const char _bt = 't';
+    static const char _volumeDown = 'v';
+    static const char _volumeUp = 'V';
+    static const char _radio = '#';
+    static const char _previousMusic = 'm';
+    static const char _nextMusic = 'M';
+    static const char _pause = 'p';
+    static const char _previousMsg = 'g';
+    static const char _nextMsg = 'G';
+    static const char _menu = 'o';
+    static const char _velDown = 'w';
+    static const char _velUp = 'W';
+
+private:
+    char m_BTcommand{};                     ///< BT received command
+    unsigned long m_BTLastTimeInLoop{};     ///< last time in radio loop
+    static const int m_BTLoopTimeout{3000}; ///< timeout to check busyPin in radio loop
+    int m_mSpeed{};                         ///< local motor speed
+
 };
 
 #endif //_BT_H

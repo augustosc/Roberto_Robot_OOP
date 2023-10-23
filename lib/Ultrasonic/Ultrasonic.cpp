@@ -5,7 +5,7 @@
 
 namespace ULTRASONIC
 {
-  //"""""""""""""""""""""""" constructor
+  //"""""""""""""""""""""""" constructor definition
 
   Ultrasonic::Ultrasonic(const uint8_t trigPin, const uint8_t echoPin)
       : m_trigPin{trigPin}, m_echoPin{echoPin}
@@ -14,9 +14,9 @@ namespace ULTRASONIC
     pinMode(m_echoPin, INPUT);
   }
 
-  //""""""""""""""""""""""""
+  //""""""""""""""""""""""""member funtion definition
 
-  float Ultrasonic::getDistance()
+  const float Ultrasonic::getDistance()
   {
     digitalWrite(m_trigPin, LOW);
     delayMicroseconds(2);

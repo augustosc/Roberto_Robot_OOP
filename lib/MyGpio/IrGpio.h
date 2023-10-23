@@ -4,7 +4,7 @@
 namespace IrGpio {
     // IRremote control pins
 
-    constexpr int irPin           {4};
+    constexpr int irPin           {4};  ///< IR remote pin
 }
 
 #endif //_IRGPIO_H

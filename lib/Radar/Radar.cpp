@@ -3,67 +3,74 @@
 namespace RADAR
 {
 
-  //"""""""""""""""""""""""" constructor
+  //"""""""""""""""""""""""" constructor definition
 
   Radar::Radar(const uint8_t trigPin, const uint8_t echoPin, const int servoPin, const int pulseMin, const int pulseMax)
       : ultrasonic{trigPin, echoPin}, m_servoPin{servoPin}, m_pulseMin{pulseMin}, m_pulseMax{pulseMax}
   {
+    //ATTENTION:
     // do not attach servo inside class constructor
     // attaching the servo inside the main script setup()
   }
 
-  //"""""""""""""""""""""""" get distance methods
+  //""""""""""""""""""""""""public member functions
 
-  float Radar::getDistanceAhead(int _delay)
+  const float Radar::getDistanceAhead(int _delay)
   {
     servo.write(m_Position.head);
     delay(_delay);
     return ultrasonic.getDistance();
   }
 
+
   //""""""""""""""""""""""""
 
-  float Radar::getDistanceRight(int _delay)
+  const float Radar::getDistanceRight(int _delay)
   {
     servo.write(m_Position.right);
     delay(_delay);
     return ultrasonic.getDistance();
   }
 
+
   //""""""""""""""""""""""""
 
-  float Radar::getDistanceDiagRight(int _delay)
+  const float Radar::getDistanceDiagRight(int _delay)
   {
     servo.write(m_Position.diagRight);
     delay(_delay);
     return ultrasonic.getDistance();
   }
 
+
   //""""""""""""""""""""""""
 
-  float Radar::getDistanceLeft(int _delay)
+  const float Radar::getDistanceLeft(int _delay)
   {
     servo.write(m_Position.left);
     delay(m_servoDelay);
     return ultrasonic.getDistance();
   }
 
+
   //""""""""""""""""""""""""
 
-  float Radar::getDistanceDiagLeft(int _delay)
+  const float Radar::getDistanceDiagLeft(int _delay)
   {
     servo.write(m_Position.diagLeft);
     delay(_delay);
     return ultrasonic.getDistance();
   }
 
+
   //"""""""""""""""""""""""" servo methods
 
-  int Radar::moveServo(int angle)
+  const int Radar::moveServo(int angle)
   {
     servo.write(angle);
     return servo.read();
   }
+
 
   //""""""""""""""""""""""""
 
@@ -71,6 +78,7 @@ namespace RADAR
   {
     m_servoID = servo.attach(m_servoPin, m_pulseMin, m_pulseMax);
   }
+
 
   //""""""""""""""""""""""""
 
@@ -87,12 +95,14 @@ namespace RADAR
     return servo.attached();
   }
 
+
   //""""""""""""""""""""""""
 
   int Radar::getServoID()
   {
     return m_servoID;
   }
+  
 
   //""""""""""""""""""""""""
 

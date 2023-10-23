@@ -6,21 +6,22 @@
 namespace LED
 {
 
+  //"""""""""""""""""""""""" class
+
   /// @brief manage Roberto remote control led
   class Led
   {
 
-  private:
-    uint8_t m_pin;                    ///< led pin
-    bool m_reverse;                   ///< reverse logic
-    uint8_t m_state;                  ///< led state
-    unsigned long m_previousToggle{}; ///< time in ms of last toggle
-
+  //"""""""""""""""""""""""" constructor declaration
   public:
     /// @brief Led constructor
     /// @param pin led pin
     /// @param reverse reverse logic
     Led(uint8_t pin, bool reverse);
+
+
+
+    //"""""""""""""""""""""""" public member functions
 
     /// @brief init led gpio
     void begin();
@@ -37,6 +38,15 @@ namespace LED
     /// @brief blink led
     /// @param interval blinking interval
     void blink(const unsigned long interval);
+
+  
+  
+  //""""""""""""""""""""""""private data members
+  private:
+    uint8_t m_pin;                    ///< led pin
+    bool m_reverse;                   ///< reverse logic
+    uint8_t m_state;                  ///< led state
+    unsigned long m_previousToggleTime{}; ///< time in ms of last toggle
   };
 
 } // namespace LED

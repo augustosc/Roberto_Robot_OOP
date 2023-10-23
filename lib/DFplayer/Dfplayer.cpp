@@ -5,10 +5,14 @@
 
 namespace DFPLAYER
 {
+    //"""""""""""""""""""""" constructor definition
+
     Dfplayer::Dfplayer(uint8_t rxPin, uint8_t txPin, int busyPin)
         : dfp{}, dfpSerial{rxPin, txPin}, m_busyPin{busyPin}
     {
     }
+
+
 
     //""""""""""""""""""""""
 
@@ -179,14 +183,14 @@ namespace DFPLAYER
 
     //""""""""""""""""""""""
 
-    int Dfplayer::readBusyPin()
+    const int Dfplayer::readBusyPin()
     {
         return digitalRead(m_busyPin);
     }
 
     //""""""""""""""""""""""
 
-    int Dfplayer::readState()
+    const int Dfplayer::readState()
     {
         dfpSerial.listen();
 
@@ -194,6 +198,76 @@ namespace DFPLAYER
         delay(100);
 
         return state;
+    }
+
+    void Dfplayer::playRandomMusic(){
+        m_currentMusic = random(1, m_nMp3Files + 1);
+
+        dfp.playMp3Folder(m_currentMusic);
+    }
+
+    void Dfplayer::pauseMusic(){
+        dfp.pause();
+    }
+
+    void Dfplayer::startMusic(){
+        dfp.start();
+    }
+
+    void Dfplayer::pauseStartMusic(){
+
+        (m_isPaused) ? dfp.start() : dfp.pause();
+
+        m_isPaused = !m_isPaused;
+
+        delay(150);
+    }
+
+    void Dfplayer::volumeDown(){
+        if (m_currentVolume > 5){
+            m_currentVolume--;
+            dfp.volumeDown();
+        }
+    }
+
+    void Dfplayer::volumeUp(){
+        if (m_currentVolume < 30)
+        {
+            m_currentVolume++;
+            dfp.volumeUp();
+        }
+    }
+
+    void Dfplayer::playPreviousMusic(){
+        
+        (m_currentMusic > 1) ? m_currentMusic-- : m_currentMusic = m_nMp3Files;
+
+        dfp.playMp3Folder(m_currentMusic);
+    }
+
+    void Dfplayer::playNextMusic(){
+
+        (m_currentMusic < m_nMp3Files) ? m_currentMusic++ : m_currentMusic = 1;
+
+        dfp.playMp3Folder(m_currentMusic);
+    }
+
+    void Dfplayer::playPreviousMsg(){
+
+        (m_currentGoodMorningMsg > 1) ? m_currentGoodMorningMsg-- : m_currentGoodMorningMsg = m_nGoodMorningMsgFiles;
+
+        dfp.playFolder(1,m_currentGoodMorningMsg);
+    }
+
+    void Dfplayer::playNextMsg(){
+
+        (m_currentGoodMorningMsg < m_nGoodMorningMsgFiles) ? m_currentGoodMorningMsg++ : m_currentGoodMorningMsg = 1;
+
+         dfp.playFolder(1,m_currentGoodMorningMsg);
+    }
+
+    void Dfplayer::playMenu(){
+        dfp.playFolder(4, 1);
     }
 
 } // namespace DFPLAYER {

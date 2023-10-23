@@ -1,38 +1,80 @@
 #include <Arduino.h>
 #include "IR.h"
-#include "Dfplayer.h"
 #include "CarState.h"
 #include "IrGpio.h"
 
-//#define _DEBUG
-#define _DEBUG_BT
+#define _DEBUG
+//#define _DEBUG_BT
 
 
-//"""""""""""""""""""""""" constructor
-IR::IR(RADARCAR::RadarCar *Car, DFPLAYER::Dfplayer *DFP, LED::Led *led, SoftwareSerial *_bt)
-    : receptor{IrGpio::irPin}, comando{}, Roberto{Car}, myDFP{DFP}, ledCtrl{led}, bt{_bt}
+//"""""""""""""""""""""""" constructor definition 
+
+IR::IR(SelfCar *Car, LED::Led *led, SoftwareSerial *_bt)
+    : receptor{IrGpio::irPin}, comando{}, Roberto{Car},  ledCtrl{led}, bt{_bt}
 {
 }
 
-//"""""""""""""""""""""""" begin
+//"""""""""""""""""""""""" IR begin
 
 void IR::begin()
 {
   receptor.enableIRIn();
 }
 
-//"""""""""""""""""""""""" command methods
+
+
+//"""""""""""""""""""""""" public member functions
+
+void IR::checkIRCommand()
+{
+#ifdef _DEBUG
+  // Serial.println("checkIRCommand()");
+  // BT.println("checkIRCommand()");
+#endif
+
+  if (Roberto->getState() != CarState::onBtControl)
+  {
+    if (receptor.decode(&comando))
+    {
+
+      if (comando.value == _go // turn ON/OFF remote control
+          || comando.value == _radio  // turn ON/OFF radio
+          || comando.value == _previousMusic // previous music
+          || comando.value == _nextMusic   // next music
+          || comando.value == _pause  // pause/restart music
+          || comando.value == _volumeDown     // volume down
+          || comando.value == _volumeUp   // volume up
+          || comando.value == _previousMsg   // previous gm msg
+          || comando.value == _nextMsg   // next gm msg
+          || comando.value == _menu   // menu
+        ) 
+      {
+        execIRCommand();
+      }
+
+      receptor.resume();
+
+      delay(10); // delay for resume
+
+    }
+    IRcommandLoop();
+  }
+}
+
+
+
+//""""""""""""""""""""""""
 
 void IR::execIRCommand()
 {
   switch (comando.value)
   {
 
-  case _asterisco: // turn ON/OFF remote control mode
+  case _go: // turn ON/OFF remote control mode
 
-    if (robertoState == CarState::automatic)
+    if (Roberto->getState() == CarState::automatic)
     {
-      robertoState = CarState::remoteControl;
+      Roberto->updateState(CarState::onIrControl);
 
 #ifdef _DEBUG
       Serial.println("*: turn ON remote control");
@@ -47,7 +89,7 @@ void IR::execIRCommand()
     }
     else
     {
-      robertoState = CarState::automatic;
+      Roberto->updateState(CarState::automatic);
 
 #ifdef _DEBUG
       Serial.println("*: turn OFF remote control");
@@ -61,27 +103,23 @@ void IR::execIRCommand()
 
     break;
 
-  case _velha: // turn ON/OFF radio
-    myDFP->m_currentMusic = random(1, myDFP->m_nMp3Files + 1);
-
-    myDFP->m_radioON = !myDFP->m_radioON;
-
-    //Roberto->myDFP->m_radioON = 0;
-
-    if (myDFP->m_radioON)
+  case _radio: // turn radio ON/OFF
+    Roberto->myDFP.setRadioON(!Roberto->myDFP.getRadioON());
+    if (Roberto->myDFP.getRadioON())
     {
+      Roberto->playRandomMusic();
 
 #ifdef _DEBUG
       Serial.println("#: turn ON radio");
 #endif
 #ifdef _DEBUG_BT
       bt->println("#: turn ON radio");
-#endif
+#endif 
 
-      myDFP->dfp.playMp3Folder(myDFP->m_currentMusic);
     }
     else
     {
+      Roberto->pauseMusic();
 
 #ifdef _DEBUG
       Serial.println("#: turn OFF radio");
@@ -90,146 +128,115 @@ void IR::execIRCommand()
       bt->println("#: turn OFF radio");
 #endif
 
-      myDFP->dfp.pause();
     }
     break;
 
-  case _um: // Volume down
 
-    if (myDFP->m_currentVolume > 5)
-    {
-      myDFP->m_currentVolume--;
-      myDFP->dfp.volumeDown();
-    }
+  case _volumeDown: // Volume down
+      Roberto->volumeDown();
 
 #ifdef _DEBUG
     Serial.print("1: Volume down = ");
-    Serial.println(myDFP->m_currentVolume);
+    Serial.println(Roberto->myDFP.getCurrentVoulme());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "1: volume down = %d", myDFP->m_currentVolume);
+      sprintf(buf, "1: volume down = %d", Roberto->myDFP.m_currentVolume);
       bt->println(buf);
     }
 #endif
+
     break;
 
-  case _tres: // Volume up
 
-    if (myDFP->m_currentVolume < 30)
-    {
-      myDFP->m_currentVolume++;
-      myDFP->dfp.volumeUp();
-    }
+  case _volumeUp: // Volume up
+      Roberto->volumeUp();
 
 #ifdef _DEBUG
     Serial.print("3: Volume up = ");
-    Serial.println(myDFP->m_currentVolume);
+    Serial.println(Roberto->myDFP.getCurrentVoulme());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "3: volume up = %d", myDFP->m_currentVolume);
+      sprintf(buf, "3: volume up = %d", Roberto->myDFP.m_currentVolume);
       bt->println(buf);
     }
 #endif
 
     break;
 
-  case _quatro: // previous music
 
-    (myDFP->m_currentMusic > 1) ? myDFP->m_currentMusic-- : myDFP->m_currentMusic = myDFP->m_nMp3Files;
+  case _previousMusic: // previous music
+    Roberto->playPreviousMusic();
+    Roberto->myDFP.setRadioON(1);
 
 #ifdef _DEBUG
     Serial.print("4: previous music = ");
-    Serial.println(myDFP->m_currentMusic);
+    Serial.println(Roberto->myDFP.getCurrentMusic());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "4: previous music = %d", myDFP->m_currentMusic);
+      sprintf(buf, "4: previous music = %d", Roberto->myDFP.m_currentMusic);
       bt->println(buf);
     }
 #endif
 
-    myDFP->dfp.playMp3Folder(myDFP->m_currentMusic);
-
-    myDFP->m_radioON = 1;
     break;
 
-  case _cinco: // pause/start music
 
-    myDFP->m_isPaused = !myDFP->m_isPaused;
 
-    if (myDFP->m_isPaused)
-    {
+  case _pause: // pause/start music
+    Roberto->pauseStartMusic();
 
 #ifdef _DEBUG
-      Serial.println("5: pause music");
-#endif
-#ifdef _DEBUG_BT
-      bt->println("5: pause music");
+        Serial.println("p: pause music");
 #endif
 
-      myDFP->dfp.pause();
-    }
-    else
-    {
-
-#ifdef _DEBUG
-      Serial.println("5: restart music");
-#endif
-#ifdef _DEBUG_BT
-      bt->println("5: restart music");
-#endif
-
-      myDFP->dfp.start();
-      delay(150);
-    }
-    myDFP->m_radioON = 1;
     break;
 
-  case _seis: // next music
-    (myDFP->m_currentMusic < myDFP->m_nMp3Files) ? myDFP->m_currentMusic++ : myDFP->m_currentMusic = 1;
+
+  case _nextMusic: // next music
+    Roberto->playNextMusic();
+    Roberto->myDFP.setRadioON(1);
 
 #ifdef _DEBUG
     Serial.print("6: next music = ");
-    Serial.println(myDFP->m_currentMusic);
+    Serial.println(Roberto->myDFP.getCurrentMusic());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "6: next music = %d", myDFP->m_currentMusic);
+      sprintf(buf, "6: next music = %d", Roberto->myDFP.m_currentMusic);
       bt->println(buf);
     }
 #endif
 
-    myDFP->dfp.playMp3Folder(myDFP->m_currentMusic);
-
-    myDFP->m_radioON = 1;
     break;
 
-  case _sete: // previous good morning message
 
-    (myDFP->m_goodMorningMsg > 1) ? myDFP->m_goodMorningMsg-- : myDFP->m_nGoodMorningMsgFiles;
+  case _previousMsg: // previous good morning message
+    Roberto->playPreviousMsg();
 
 #ifdef _DEBUG
     Serial.print("7: previous gm msg = ");
-    Serial.println(myDFP->m_goodMorningMsg);
+    Serial.println(Roberto->myDFP.getCurrentGoodMorningMsg());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "7: previous gm msg = %d", myDFP->m_goodMorningMsg);
+      sprintf(buf, "7: previous gm msg = %d", Roberto->myDFP.m_currentGoodMorningMsg);
       bt->println(buf);
     }
 #endif
 
-    myDFP->dfp.playFolder(1, myDFP->m_goodMorningMsg);
     break;
 
-  case _oito: // IR remote control menu
+
+  case _menu: // IR remote control menu
+    Roberto->playMenu();
 
 #ifdef _DEBUG
     Serial.println("8: MENU");
@@ -238,28 +245,27 @@ void IR::execIRCommand()
     bt->println("8: MENU");
 #endif
 
-    myDFP->dfp.playFolder(4, 1);
     break;
 
-  case _nove: // next good morning message
 
-    (myDFP->m_goodMorningMsg < myDFP->m_nGoodMorningMsgFiles) ? myDFP->m_goodMorningMsg++ : myDFP->m_goodMorningMsg = 1;
+  case _nextMsg: // next good morning message
+  Roberto->playNextMsg();
 
 #ifdef _DEBUG
-    Serial.print("9: next gm msg = "); Serial.println(myDFP->m_goodMorningMsg);
+    Serial.print("9: next gm msg = "); Serial.println(Roberto->myDFP.getCurrentGoodMorningMsg());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "9: next gm msg = %d", myDFP->m_goodMorningMsg);
+      sprintf(buf, "9: next gm msg = %d", Roberto->myDFP.m_currentGoodMorningMsg);
       bt->println(buf);
     }
 #endif
 
-    myDFP->dfp.playFolder(1, myDFP->m_goodMorningMsg);
     break;
 
-  case _ok: // stop Roberto
+  case _stop: // stop Roberto
+    Roberto->stopMove();
 
 #ifdef _DEBUG
     Serial.println("ok: stop");
@@ -268,10 +274,11 @@ void IR::execIRCommand()
     bt->println("ok: stop");
 #endif
 
-    Roberto->stopMove();
     break;
 
-  case _frente: // move Roberto forward
+
+  case _forward: // move Roberto forward
+    Roberto->moveForward();
 
 #ifdef _DEBUG
     Serial.println("^: forward");
@@ -280,10 +287,11 @@ void IR::execIRCommand()
     bt->println("^: forward");
 #endif
 
-    Roberto->moveForward();
     break;
 
-  case _tras: // move Roberto backward
+
+  case _backward: // move Roberto backward
+    Roberto->moveBackward();
 
 #ifdef _DEBUG
     Serial.println("v: backward");
@@ -292,10 +300,12 @@ void IR::execIRCommand()
     bt->println("v: backward");
 #endif
 
-    Roberto->moveBackward();
     break;
 
-  case _direita: // turn Roberto right and stop
+
+  case _turnRight: // turn Roberto right and stop
+    Roberto->turnRight();
+    Roberto->stopMove();
 
 #ifdef _DEBUG
     Serial.println("-> turn right");
@@ -304,15 +314,11 @@ void IR::execIRCommand()
     bt->println("-> turn right");
 #endif
 
-    Roberto->turnRight();
-
-    /**** alteracao 2v2 **/
-    Roberto->stopMove();
-    /*********************/
-
     break;
 
-  case _esquerda: // turn Roberto left and stop
+  case _turnLeft: // turn Roberto left and stop
+    Roberto->turnLeft();
+    Roberto->stopMove();
 
 #ifdef _DEBUG
     Serial.println("<- turn left");
@@ -321,18 +327,14 @@ void IR::execIRCommand()
     bt->println("<- turn left");
 #endif
 
-    Roberto->turnLeft();
-
-    /**** alteracao 2v2 **/
-    Roberto->stopMove();
-    /*********************/
-
     break;
+
 
   case _dup:
     break;
 
   default: // ignore other comands
+
 #ifdef _DEBUG
     Serial.print("other: 0x");
     Serial.println(comando.value, HEX);
@@ -346,53 +348,14 @@ void IR::execIRCommand()
   }
 }
 
-//""""""""""""""""""""""""
 
-void IR::checkIRCommand()
-{
-#ifdef _DEBUG
-  // Serial.println("checkIRCommand()");
-  // BT.println("checkIRCommand()");
-#endif
 
-  if (robertoState != CarState::bluetooth)
-  {
-    if (receptor.decode(&comando))
-    {
-      /***************** alteracao v2.2   ***/
-
-      if (comando.value == _asterisco // turn ON/OFF remote control
-          || comando.value == _velha  // turn ON/OFF radio
-          || comando.value == _quatro // previous music
-          || comando.value == _seis   // next music
-          || comando.value == _cinco  // pause/restart music
-          || comando.value == _um     // volume down
-          || comando.value == _tres   // volume up
-          || comando.value == _sete   // previous gm msg
-          || comando.value == _nove   // next gm msg
-          || comando.value == _oito   // menu
-        ) 
-      {
-        execIRCommand();
-      }
-
-      /*****************/
-
-      receptor.resume();
-
-      /************* alteracao v2.2   ****/
-      delay(10); // delay for resume
-      /*****************/
-    }
-    IRcommandLoop();
-  }
-}
 
 //"""""""""""""""""""""""" loop methods
 
 void IR::IRcommandLoop()
 {
-  while (robertoState == CarState::remoteControl)
+  while (Roberto->getState() == CarState::onIrControl)
   {
     if (receptor.decode(&comando))
     {
@@ -421,17 +384,17 @@ void IR::IRradioInLoop()
 
   // check busyPin each 3s and,if that's the case, change music
   // busypin == LOW when playing
-  if (myDFP->m_radioON && !myDFP->m_isPaused && millis() - m_IRLastTimeInLoop > m_IRLoopTimeout)
+  if (Roberto->myDFP.getRadioON() && !Roberto->myDFP.getIsPaused() && millis() - m_IRLastTimeInLoop > m_IRLoopTimeout)
   {
 
 #ifdef _DEBUG
     Serial.print("radio loop: busy pin = ");
-    Serial.println(myDFP->readBusyPin());
+    Serial.println(Roberto->myDFP.readBusyPin());
 #endif
 #ifdef _DEBUG_BT
     {
       char buf[20];
-      sprintf(buf, "radio loop: busy pin = %d", myDFP->readBusyPin());
+      sprintf(buf, "radio loop: busy pin = %d", Roberto->myDFP.readBusyPin());
       // detach servo to eliminate conflict during BT transmit
       Roberto->radarDetach();
       bt->println(buf);
@@ -440,9 +403,9 @@ void IR::IRradioInLoop()
     }
 #endif
 
-    if (myDFP->readBusyPin())
+    if (Roberto->myDFP.readBusyPin())
     {
-      comando.value = _seis;
+      comando.value = _nextMusic;
       execIRCommand();
     }
     m_IRLastTimeInLoop = millis();

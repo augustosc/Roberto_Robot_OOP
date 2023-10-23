@@ -1,7 +1,8 @@
 #include "RadarCar.h"
 #include "UltraGpio.h"
 #include "ServoGpio.h"
-#include "MotorGpio.h"
+//#include "MotorGpio.h"
+#include "DfpGpio.h"
 
 /**
  *Do not use BT debug in RadarCar because of Servo library conflicts.
@@ -13,65 +14,15 @@
 namespace RADARCAR
 {
 
-  //"""""""""""""""""""""""" constructor
+  //"""""""""""""""""""""""" constructor definition
 
-  RadarCar::RadarCar(DFPLAYER::Dfplayer *DFP)
-      : MD{MotorGpio::mDpin1, MotorGpio::mDpin2, MotorGpio::mDhab}, ME{MotorGpio::mEpin1, MotorGpio::mEpin2, MotorGpio::mEhab}, radar{UltraGpio::trigPin, UltraGpio::echoPin, ServoGpio::servoPin, ServoGpio::pulseMin, ServoGpio::pulseMax}, myDFP{DFP}
+  RadarCar::RadarCar()
+      : radar{UltraGpio::trigPin, UltraGpio::echoPin, ServoGpio::servoPin, ServoGpio::pulseMin, ServoGpio::pulseMax}, myDFP{DfpGpio::dfpRxPin,DfpGpio::dfpTxPin,DfpGpio::busyPin}
   {
-    // Adjust motor speed
-    MD.setMotorSpeed(m_rightMotorSpeed);
-    ME.setMotorSpeed(m_leftMotorSpeed);
   }
 
-  //"""""""""""""""""""""""" move methods
-
-  void RadarCar::moveForward()
-  {
-    MD.forward();
-    ME.forward();
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::moveBackward()
-  {
-    MD.backward();
-    ME.backward();
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::stopMove()
-  {
-    MD.off();
-    ME.off();
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::turnLeft()
-  {
-    this->stopMove();
-    delay(500);
-    MD.forward(m_currentTurnSpeed);
-    ME.backward(m_currentTurnSpeed);
-    delay(m_currentTurnInterval);
-    this->stopMove();
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::turnRight()
-  {
-    this->stopMove();
-    delay(500);
-    MD.backward(m_currentTurnSpeed);
-    ME.forward(m_currentTurnSpeed);
-    delay(m_currentTurnInterval);
-    this->stopMove();
-  }
-
-  //"""""""""""""""""""""""" map methods
+  
+  //"""""""""""""""""""""""" public radar member functions
 
   void RadarCar::radarAttach()
   {
@@ -85,7 +36,10 @@ namespace RADARCAR
     radar.detach();
   }
 
-  //""""""""""""""""""""""""
+
+
+
+  //"""""""""""""""""""""""" self drive member functions
 
   void RadarCar::lookAhead()
   {
@@ -116,7 +70,6 @@ namespace RADARCAR
 
     checkMaxStops();
 
-    checkStopMsgOnPause();
   }
 
   //""""""""""""""""""""""""
@@ -125,7 +78,7 @@ namespace RADARCAR
   {
     obstacle.isClose = false;
 
-    obstacle.distance[diagRight] = radar.getDistanceDiagRight(100);
+    obstacle.distance[diagRight] = radar.getDistanceDiagRight(150);
 
     if (obstacle.distance[diagRight] < m_minObstacleDistance)
     {
@@ -142,7 +95,7 @@ namespace RADARCAR
       return;
     }
 
-    obstacle.distance[diagLeft] = radar.getDistanceDiagLeft(250);
+    obstacle.distance[diagLeft] = radar.getDistanceDiagLeft(300);
 
     if (obstacle.distance[diagLeft] < m_minObstacleDistance)
     {
@@ -158,7 +111,7 @@ namespace RADARCAR
       return;
     }
 
-    obstacle.distance[head] = radar.getDistanceAhead(100);
+    obstacle.distance[head] = radar.getDistanceAhead(150);
 
     if (obstacle.distance[head] < m_minObstacleDistance)
     {
@@ -181,11 +134,12 @@ namespace RADARCAR
 
   void RadarCar::mapSide()
   {
-    obstacle.distance[diagRight] = radar.getDistanceDiagRight(200);
-    obstacle.distance[right] = radar.getDistanceRight(300);
+    obstacle.distance[diagRight] = radar.getDistanceDiagRight(250);
+    obstacle.distance[right] = radar.getDistanceRight(250);
     obstacle.distance[diagLeft] = radar.getDistanceDiagLeft(500);
-    obstacle.distance[left] = radar.getDistanceLeft(300);
+    obstacle.distance[left] = radar.getDistanceLeft(250);
     this->lookAhead();
+    
   }
 
   //""""""""""""""""""""""""
@@ -207,133 +161,23 @@ namespace RADARCAR
     return (obstacle.distance[right] >= obstacle.distance[left]);
   }
 
+
   //""""""""""""""""""""""""
 
-  struct obstacleInfo *RadarCar::getObstacleInfo()
+  const struct obstacleInfo *RadarCar::getObstacleInfo()
   {
     return &obstacle;
   }
 
-  //"""""""""""""""""""""""" turn methods
 
-  void RadarCar::setTurnSpeed(int newTurnSpeed)
-  {
-    m_currentTurnSpeed = newTurnSpeed;
-  }
 
-  //""""""""""""""""""""""""
 
-  void RadarCar::resetTurnSpeed()
-  {
-    m_currentTurnSpeed = m_defaultTurnSpeed;
-  }
-
-  //""""""""""""""""""""""""
-
-  int RadarCar::getTurnSpeed()
-  {
-    return m_currentTurnSpeed;
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::setTurnInterval(int newInterval)
-  {
-    m_currentTurnInterval = newInterval;
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::resetTurnInterval()
-  {
-    m_currentTurnInterval = m_defaultTurnInterval;
-  }
-
-  //""""""""""""""""""""""""
-
-  int RadarCar::getTurnInterval()
-  {
-    return m_currentTurnInterval;
-  }
-
-  //"""""""""""""""""""""""" speed methods
-
-  void RadarCar::setMotorSpeed(int motorID, int newSpeed)
-  {
-    switch (motorID)
-    {
-    case rightMotor:
-      MD.setMotorSpeed(newSpeed);
-      break;
-
-    case leftMotor:
-      ME.setMotorSpeed(newSpeed);
-      break;
-
-    case bothMotors:
-      MD.setMotorSpeed(newSpeed);
-      ME.setMotorSpeed(newSpeed);
-    }
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::setMotorSpeed(int newSpeed)
-  {
-    setMotorSpeed(bothMotors, newSpeed);
-  }
-
-  //""""""""""""""""""""""""
-
-  void RadarCar::resetMotorSpeed(int motorID)
-  {
-
-    switch (motorID)
-    {
-    case rightMotor:
-      MD.resetMotorSpeed();
-      break;
-
-    case leftMotor:
-      ME.resetMotorSpeed();
-      break;
-
-    case bothMotors:
-      MD.resetMotorSpeed();
-      ME.resetMotorSpeed();
-    }
-  }
-
-  //""""""""""""""""""""""""
-
-  int RadarCar::getMotorSpeed(int motorID)
-  {
-    switch (motorID)
-    {
-
-    case rightMotor:
-      return MD.getMotorSpeed();
-      break;
-
-    case leftMotor:
-      return ME.getMotorSpeed();
-      break;
-
-    case bothMotors:
-      if (MD.getMotorSpeed() == ME.getMotorSpeed())
-        return MD.getMotorSpeed();
-      else
-        return 130;
-    }
-    return 0;
-  }
-
-  //""""""""""""""""""""""""
+  //""""""""""""""""""""""""public DFPlayer member functions
 
   void RadarCar::speakStopMsg()
   {
     // if DFP paused, 'start DFP' before play stop message as advertisement message
-    if (myDFP->m_isPaused)
+    if (myDFP.getIsPaused())
     {
 #ifdef _DEBUG
       Serial.print("m_isSpeakingMsgOnPause OFF, busyPin = ");
@@ -341,18 +185,22 @@ namespace RADARCAR
       Serial.print("\tDFP state = ");
       Serial.println(myDFP->readState());
 #endif
-      myDFP->dfp.start();
+      myDFP.startMusic();
       delay(100);
 
-      myDFP->m_isPaused = !myDFP->m_isPaused;
+      myDFP.setIsPaused(!myDFP.getIsPaused());
 
+      // set speaking stop message on pause flag
       m_isSpeakingMsgOnPause = true;
 
       m_timeStopMsgStarted = millis();
     }
 
-    myDFP->playStopMsg();
+    myDFP.playStopMsg();
   }
+
+
+  //""""""""""""""""""""""""
 
   void RadarCar::checkMaxStops()
   {
@@ -367,6 +215,9 @@ namespace RADARCAR
       speakStopMsg();
     }
   }
+
+
+  //""""""""""""""""""""""""
 
   void RadarCar::checkStopMsgOnPause()
   {
@@ -389,10 +240,10 @@ namespace RADARCAR
         Serial.println(myDFP->readState());
 #endif
 
-        myDFP->dfp.pause();
+        myDFP.pauseMusic();
         delay(100);
 
-        myDFP->m_isPaused = !myDFP->m_isPaused;
+        myDFP.setIsPaused(!myDFP.getIsPaused());
 
         m_isSpeakingMsgOnPause = false;
 
@@ -405,5 +256,48 @@ namespace RADARCAR
       }
     }
   }
+
+
+  //""""""""""""""""""""""""public DFPlayer delegate functions
+
+  void RadarCar::playRandomMusic() {
+    myDFP.playRandomMusic();
+  }
+
+    void RadarCar::pauseMusic(){
+      myDFP.pauseMusic();
+    }
+
+    void RadarCar::volumeDown(){
+      myDFP.volumeDown();
+    }
+
+    void RadarCar::volumeUp(){
+      myDFP.volumeUp();
+    }
+
+    void RadarCar::playPreviousMusic(){
+      myDFP.playPreviousMusic();
+    }
+
+    void RadarCar::playNextMusic(){
+      myDFP.playNextMusic();
+    }
+
+    void RadarCar::pauseStartMusic(){
+      myDFP.pauseStartMusic();
+    }
+
+    void RadarCar::playPreviousMsg(){
+      myDFP.playPreviousMsg();
+    }
+
+    void RadarCar::playNextMsg(){
+      myDFP.playNextMsg();
+    }
+
+    void RadarCar::playMenu(){
+      myDFP.playMenu();
+    }
 
 } // namespace RADARCAR

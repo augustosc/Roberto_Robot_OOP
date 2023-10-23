@@ -5,7 +5,7 @@
 namespace UltraGpio {
     // Ultrasonic control pins
 
-    constexpr uint8_t trigPin  {3};
-    constexpr uint8_t echoPin  {2};
+    constexpr uint8_t trigPin  {3};     ///< ultrasonic trigger pin
+    constexpr uint8_t echoPin  {2};     ///< ultrasonic echoPin
 }
 #endif //_ULTRAGPIO_H

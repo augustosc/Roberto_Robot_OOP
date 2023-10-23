@@ -1,7 +1,7 @@
 
 #include "Arduino.h"
 #include "SoftwareSerial.h"
-#include "Piloto.h"
+#include "SelfCar.h"
 #include "Dfplayer.h"
 #include "IR.h"
 #include "Led.h"
@@ -11,24 +11,21 @@
 #include "LedGpio.h"
 #include "BtGpio.h"
 
-//"""""""""""""""""""""""" set initial Roberto state
-CarState robertoState{CarState::automatic};
+
+
 
 //"""""""""""""""""""""""" my objects
 
-SoftwareSerial Bt(BtGpio::BTrxPin, BtGpio::BTtxPin);
-
-DFPLAYER::Dfplayer myDFP(DfpGpio::dfpRxPin, DfpGpio::dfpTxPin, DfpGpio::busyPin); 
-
-RADARCAR::RadarCar Roberto(&myDFP); 
-
-Piloto Senna(Roberto, &Bt);
+SoftwareSerial Bluetooth(BtGpio::BTrxPin, BtGpio::BTtxPin);
 
 LED::Led ledControl(LedGpio::ledControlPin, true);
 
-BT myBT(&Roberto, &myDFP, &ledControl, &Bt);
+SelfCar Roberto(&Bluetooth);
 
-IR myIR(&Roberto, &myDFP, &ledControl, &Bt);
+BT myBT(&Roberto, &ledControl, &Bluetooth);
+
+IR myIR(&Roberto, &ledControl, &Bluetooth);
+
 
 /////////////////////////////////////////////////////////
 void setup()
@@ -43,12 +40,15 @@ void setup()
   // Positions radar ahead
   Roberto.lookAhead();
 
+  // init Roberto in automatic mode
+  Roberto.updateState(CarState::automatic);
+
   // set initial motor speed
   Roberto.setMotorSpeed(115);
   Roberto.setTurnSpeed(135);
 
   // init DFPlayer
-  myDFP.begin();
+  Roberto.myDFP.begin();
 
   // init IR remote control
   myIR.begin();
@@ -57,7 +57,7 @@ void setup()
   randomSeed(micros() % 43);
 
   // play Good Morning message
-  myDFP.playGoodMorningMsg();
+  Roberto.myDFP.playGoodMorningMsg();
   delay(500);
 
   // init BT remote control
@@ -68,6 +68,7 @@ void setup()
   myBT.listen();
 }
 
+
 //////////////////////////////////////////////////////////
 void loop()
 {
@@ -77,8 +78,8 @@ void loop()
   static unsigned long timeNow;                  ///< used for scanFront timeout
 
   //""""""""""""""""""""""""scan ahead
-  Senna.scanAhead();
-  Senna.moveForward();
+  Roberto.scanAhead();
+  Roberto.moveForward();
 
   //"""""""""""""""""""""""" checK IR or BT command
   myIR.checkIRCommand();
@@ -90,8 +91,8 @@ void loop()
   if (timeNow - lastScanTime > ScanFrontTimeout)
   {
     lastScanTime = timeNow;
-    Senna.scanFront();
-    Senna.moveForward();
+    Roberto.scanFront();
+    Roberto.moveForward();
   }
 
   delay(15);

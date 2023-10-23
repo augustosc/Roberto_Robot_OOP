@@ -5,11 +5,11 @@
 //"""""""""""""""""""""""" instance in main.cpp
 
     /// @brief possible Roberto states
-    enum class CarState {remoteControl, bluetooth, automatic};
-
-    // external object CarState
-    extern CarState robertoState; ///< instance in main.cpp
-
+    enum class CarState {
+        onIrControl, 
+        onBtControl, 
+        automatic
+    };
 
 
 #endif //_CARSTATE_H

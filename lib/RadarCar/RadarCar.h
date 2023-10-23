@@ -2,13 +2,15 @@
 #define _RADARCAR_H
 
 #include <Arduino.h>
-#include "Motor.h"
+#include "Car.h"
 #include "Radar.h"
 #include "Dfplayer.h"
 
 
 namespace RADARCAR
 {
+
+  //""""""""""""""""""""""""enums
 
   ///@brief Contains obstacle distance info
   struct obstacleInfo
@@ -27,69 +29,32 @@ namespace RADARCAR
     left
   };
 
-  /// @brief motor ID
-  enum MotorId
-  {
-    rightMotor,
-    leftMotor,
-    bothMotors
-  };
-
-  /// @brief Car with two motors, a DFP and a radar
-  class RadarCar
-  {
-
-  private:
-    MOTOR::Motor MD;           ///< right motor object
-    MOTOR::Motor ME;           ///< left motor object
-    RADAR::Radar radar;        ///< radar object
-    DFPLAYER::Dfplayer *myDFP; ///< DFP object
   
-    struct obstacleInfo obstacle
-    {
-    }; ///< obstacle info
+  //""""""""""""""""""""""""class
 
+  /// @brief class RadarCar inherit Car, plus radar and a DFPlayer
+  class RadarCar : public CAR::Car
+  {
+
+  //""""""""""""""""""""""""private object composition
   private:
-    
-    /*************************************************
-     * Adjust HERE the speed of the motors, according to 
-     * the hardware, so as to keep the car in balance
-    **************************************************/
-    const int m_leftMotorSpeed{117};                  ///< left Motor speed
-    const int m_rightMotorSpeed{120};                 ///< right Motor speed
-    
-    const int m_defaultTurnSpeed{150};                ///< defautl turn speed
-    const int m_defaultTurnInterval{500};             ///< defautl turn interval
-    int m_currentTurnSpeed{m_defaultTurnSpeed};       ///< current turn speed
-    int m_currentTurnInterval{m_defaultTurnInterval}; ///< current turn interval
-    const int m_minObstacleDistance{30};              ///< min obstacle distance
-    const int m_maxStops{3};                          ///< stops before message stop
-    int m_countStops{};                               ///< count nuber of stops
-    const unsigned long m_stopMsgDuration{3000};      ///< max stopMsg duration
-    unsigned long m_timeStopMsgStarted{};             ///< time stopMsg started
-    bool m_isSpeakingMsgOnPause{};                    ///< flags playing msg on dfp pause
+    RADAR::Radar radar;        ///< radar object
 
 
+  //""""""""""""""""""""""""public object composition
   public:
+    DFPLAYER::Dfplayer myDFP;  ///< DFP object
+  
+    
 
-    /// @brief Car with 2 motors, a radar and Dfplayer mini
-    /// @param DFP DFplayer object by aggregation
-    RadarCar(DFPLAYER::Dfplayer *DFP);
+  //""""""""""""""""""""""""constructor declaration
+  public:
+    /// @brief Constructor
+    RadarCar();
 
-    /// @brief move car forward
-    void moveForward();
 
-    /// @brief move car backward
-    void moveBackward();
 
-    /// @brief stop car
-    void stopMove();
-
-    /// @brief turn car left
-    void turnLeft();
-
-    /// @brief turn car right
-    void turnRight();
+    //""""""""""""""""""""""""public radar delegate functions
 
     /// @brief attach radar servo motor
     void radarAttach();
@@ -97,74 +62,95 @@ namespace RADARCAR
     /// @brief detach radar servo motor
     void radarDetach();
 
+
+
+    //"""""""""""""""""""""""" public self drive member functions
+    
     /// @brief point radar ahead
     void lookAhead();
 
     /// @brief map obstacle distance ahead
     void mapAhead();
 
-    /// @brief map obstacle distance ahead, diagonal left and diagonal right
+    /// @brief map obstacle distances: ahead, diagonal left and diagonal right
     void mapFront();
 
-    /// @brief map obstacle distance left, diagonal left, right and diagonal right
+    /// @brief map obstacle distances: left, diagonal left, right and diagonal right
     void mapSide();
 
     /// @brief check best side to turn the car
-    /// @return true if right
+    /// @return true if right side
     bool shouldTurnRight();
 
     /// @brief return struct obstacleInfo
     /// @return pointer to obstacleInfo
-    struct obstacleInfo *getObstacleInfo();
+    const struct obstacleInfo *getObstacleInfo();
 
-    /// @brief set turn new turn speed
-    /// @param newTurnSpeed new speed
-    void setTurnSpeed(int newTurnSpeed);
+    
+    
 
-    /// @brief reset turn speed to default
-    void resetTurnSpeed();
+    //""""""""""""""""""""""""public DFPlayer member functions
 
-    /// @brief get current turn speed
-    /// @return current turn speed
-    int getTurnSpeed();
-
-    /// @brief set new turn interval
-    /// @param newIntervalSpeed new speed
-    void setTurnInterval(int newInterval);
-
-    /// @brief reset interval to default
-    void resetTurnInterval();
-
-    /// @brief get current interval
-    /// @return current interval
-    int getTurnInterval();
-
-    /// @brief set new motor speed
-    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
-    /// @param newSpeed new speed
-    void setMotorSpeed(int motorID, int newSpeed);
-
-    /// @brief set new motor speed
-    /// @param newSpeed new speed
-    void setMotorSpeed(int newSpeed);
-
-    /// @brief reset motor speed to default
-    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
-    void resetMotorSpeed(int motorID = bothMotors);
-
-    /// @brief get current motor speed
-    /// @param motorID 'rightMotor','leftMotor' or 'bothMotors'
-    /// @return current motor speed
-    int getMotorSpeed(int motorID = bothMotors);
-
-    /// @brief play stop message
+    /// @brief play stop message. If on puse set flag stop message on pause
     void speakStopMsg();
 
     /// @brief check max stop has been reached
     void checkMaxStops();
 
-    /// @brief check msg stop on pause to pause music
+    /// @brief check timeout of stop message on pause
     void checkStopMsgOnPause();
+
+
+
+    //""""""""""""""""""""""""public DFPlayer delegate functions
+
+    /// @brief delegates playRandomMusic
+    void playRandomMusic();
+
+    /// @brief delegates pauseMusic
+    void pauseMusic();
+
+    /// @brief delegates volumeDown
+    void volumeDown();
+
+    /// @brief delegates volumeUp
+    void volumeUp();
+
+    /// @brief delegates playPreviousMusic
+    void playPreviousMusic();
+
+    /// @brief delegates playNextMusic
+    void playNextMusic();
+
+    /// @brief delegates pauseStartMusic
+    void pauseStartMusic();
+
+    /// @brief delegates playPreviousMsg
+    void playPreviousMsg();
+
+    /// @brief delegates playNextMsg
+    void playNextMsg();
+
+    /// @brief delegates playMenu
+    void playMenu();
+
+
+
+
+  //""""""""""""""""""""""""protected data members
+  protected:
+    struct obstacleInfo obstacle                      ///< obstacle info
+    {
+    }; 
+
+    const int m_minObstacleDistance{30};              ///< min obstacle distance
+    const int m_maxStops{3};                          ///< stops before message stop
+    int m_countStops{};                               ///< count nuber of stops
+    const unsigned long m_stopMsgDuration{3000};      ///< max stopMsg duration
+    unsigned long m_timeStopMsgStarted{};             ///< time stopMsg started
+    bool m_isSpeakingMsgOnPause{};                    ///< flags playing msg on dfp pause
+    
+
   };
 
 } // namespace RADARCAR

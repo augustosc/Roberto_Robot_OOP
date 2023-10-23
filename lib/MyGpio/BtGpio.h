@@ -6,8 +6,8 @@
 namespace BtGpio {
     // Bluetooth control pins
     
-    constexpr uint8_t BTrxPin     {13};
-    constexpr uint8_t BTtxPin     {12};
+    constexpr uint8_t BTrxPin     {13}; ///< bluetooth object rx pin
+    constexpr uint8_t BTtxPin     {12}; ///< bluetooth object tx pin
 }
 
 #endif
