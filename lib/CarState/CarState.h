@@ -2,6 +2,7 @@
  * @file CarState.h
  * @brief Robot Roberto - An Arduino robot car 
  *
+ * @copyright	Augusto Sherman
  * @copyright	GNU Lesser General Public License
  *
  * @author [Augusto Sherman](augusto.sherman@gmail.com)
